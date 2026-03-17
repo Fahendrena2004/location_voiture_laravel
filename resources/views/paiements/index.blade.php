@@ -29,7 +29,7 @@
                                 ({{ \Carbon\Carbon::parse($paiement->location->date_debut)->format('d/m/Y') }})
                             </flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($paiement->date_paiement)->format('d/m/Y') }}</flux:table.cell>
-                            <flux:table.cell>{{ number_format($paiement->montant, 2) }} €</flux:table.cell>
+                            <flux:table.cell>{{ \App\Helpers\CurrencyHelper::format($paiement->montant) }}</flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge variant="neutral" inset="left">
                                     {{ ucfirst($paiement->mode_paiement) }}

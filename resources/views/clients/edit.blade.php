@@ -5,16 +5,39 @@
             <flux:heading size="xl">Modifier Client: {{ $client->nom }} {{ $client->prenom }}</flux:heading>
         </div>
 
-        <form action="{{ route('clients.update', $client) }}" method="POST" class="space-y-6">
+        <form action="{{ route('clients.update', $client) }}" method="POST" class="space-y-6" x-data="{ type: '{{ old('type', $client->type) }}' }">
             @csrf
             @method('PUT')
             
+            <flux:radio.group name="type" label="Type de Client" x-model="type">
+                <flux:radio value="personne" label="Personne Physique" />
+                <flux:radio value="association" label="Association / Société" />
+            </flux:radio.group>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <flux:input name="nom" label="Nom" :value="old('nom', $client->nom)" required />
-                <flux:input name="prenom" label="Prénom" :value="old('prenom', $client->prenom)" required />
+                <flux:field>
+                    <flux:label x-text="type === 'personne' ? 'Nom' : 'Raison Sociale'"></flux:label>
+                    <flux:input name="nom" :value="old('nom', $client->nom)" required />
+                </flux:field>
+                <template x-if="type === 'personne'">
+                    <flux:input name="prenom" label="Prénom" :value="old('prenom', $client->prenom)" />
+                </template>
+                <template x-if="type === 'association'">
+                    <flux:input name="nif" label="NIF" :value="old('nif', $client->nif)" />
+                </template>
             </div>
 
-            <flux:input type="date" name="date_naissance" label="Date de naissance" :value="old('date_naissance', $client->date_naissance)" required />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-if="type === 'personne'">
+                    <flux:input type="date" name="date_naissance" label="Date de naissance" :value="old('date_naissance', $client->date_naissance)" />
+                </template>
+                <template x-if="type === 'personne'">
+                    <flux:input name="cin" label="CIN" :value="old('cin', $client->cin)" />
+                </template>
+                <template x-if="type === 'association'">
+                    <flux:input name="stat" label="STAT" :value="old('stat', $client->stat)" />
+                </template>
+            </div>
 
             <flux:input name="telephone" label="Téléphone" :value="old('telephone', $client->telephone)" required />
 

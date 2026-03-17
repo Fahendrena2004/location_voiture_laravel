@@ -7,19 +7,37 @@
         'maintenance_count' => \App\Models\Voiture::where('statut', 'en entretien')->count(),
         'maintenance_cars' => \App\Models\Voiture::where('statut', 'en entretien')->get(),
     ];
+
+    // Fleet Availability Data
+    $fleet_data = [
+        'disponible' => \App\Models\Voiture::where('statut', 'disponible')->count(),
+        'louée' => \App\Models\Voiture::where('statut', 'loué')->count(),
+        'entretien' => $stats['maintenance_count'],
+    ];
+
+    // Monthly Revenu (Last 6 months)
+    $months = [];
+    $revenues = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $date = now()->subMonths($i);
+        $months[] = $date->translatedFormat('M');
+        $revenues[] = \App\Models\Paiement::whereYear('date_paiement', $date->year)
+            ->whereMonth('date_paiement', $date->month)
+            ->sum('montant');
+    }
 @endphp
 
 <x-layouts::app :title="__('Tableau de Bord')">
-    <div class="flex h-full w-full flex-1 flex-col gap-8 rounded-xl p-4">
-        <!-- Stats Header -->
+    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-4 overflow-y-auto custom-scrollbar">
+        <!-- Stats Header (Restored to Large Model) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-blue-500 group hover:-translate-y-1 transition-all duration-300">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-neutral-500 uppercase tracking-wider">Chiffre d'Affaires</p>
-                        <h3 class="text-3xl font-bold mt-1">{{ number_format($stats['revenu'], 2) }} €</h3>
+            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-yolk-500 group hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center gap-4">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-zinc-500 dark:text-neutral-500 uppercase tracking-wider truncate">Chiffre d'Affaires</p>
+                        <h3 class="text-3xl font-bold mt-1 dark:text-white truncate">{{ \App\Helpers\CurrencyHelper::format($stats['revenu']) }}</h3>
                     </div>
-                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600">
+                    <div class="shrink-0 p-3 bg-yolk-100 dark:bg-blue-900/30 rounded-full text-yolk-600 dark:text-blue-400">
                         <flux:icon name="banknotes" class="size-6" />
                     </div>
                 </div>
@@ -28,105 +46,188 @@
                 </p>
             </div>
 
-            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-emerald-500 group hover:-translate-y-1 transition-all duration-300">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-neutral-500 uppercase tracking-wider">Locations Actives</p>
-                        <h3 class="text-3xl font-bold mt-1">{{ $stats['locations'] }}</h3>
+            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-yolk-500 group hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center gap-4">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-zinc-500 dark:text-neutral-500 uppercase tracking-wider truncate">Locations Actives</p>
+                        <h3 class="text-3xl font-bold mt-1 dark:text-white">{{ $stats['locations'] }}</h3>
                     </div>
-                    <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600">
+                    <div class="shrink-0 p-3 bg-yolk-100 dark:bg-emerald-900/30 rounded-full text-yolk-600 dark:text-emerald-400">
                         <flux:icon name="calendar" class="size-6" />
                     </div>
                 </div>
-                <p class="text-xs text-neutral-500 mt-4 font-medium italic">En cours d'utilisation</p>
+                <p class="text-xs text-zinc-500 dark:text-neutral-500 mt-4 font-medium italic">En cours d'utilisation</p>
             </div>
 
-            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-amber-500 group hover:-translate-y-1 transition-all duration-300">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-neutral-500 uppercase tracking-wider">Flotte Totale</p>
-                        <h3 class="text-3xl font-bold mt-1">{{ $stats['voitures'] }}</h3>
+            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-yolk-400 group hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center gap-4">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-zinc-500 dark:text-neutral-500 uppercase tracking-wider truncate">Flotte Totale</p>
+                        <h3 class="text-3xl font-bold mt-1 dark:text-white">{{ $stats['voitures'] }}</h3>
                     </div>
-                    <div class="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-amber-600">
+                    <div class="shrink-0 p-3 bg-yolk-50 dark:bg-amber-900/30 rounded-full text-yolk-500 dark:text-amber-400">
                         <flux:icon name="truck" class="size-6" />
                     </div>
                 </div>
-                <p class="text-xs text-amber-600 mt-4 font-medium">{{ $stats['maintenance_count'] }} en maintenance</p>
+                <p class="text-xs text-yolk-600 dark:text-amber-400 mt-4 font-medium">{{ $stats['maintenance_count'] }} en maintenance</p>
             </div>
 
-            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-purple-500 group hover:-translate-y-1 transition-all duration-300">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-medium text-neutral-500 uppercase tracking-wider">Clients Fidèles</p>
-                        <h3 class="text-3xl font-bold mt-1">{{ $stats['clients'] }}</h3>
+            <div class="p-6 rounded-2xl glass shadow-premium border-l-4 border-yolk-300 group hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center gap-4">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-zinc-500 dark:text-neutral-500 uppercase tracking-wider truncate">Clients Fidèles</p>
+                        <h3 class="text-3xl font-bold mt-1 dark:text-white">{{ $stats['clients'] }}</h3>
                     </div>
-                    <div class="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-purple-600">
+                    <div class="shrink-0 p-3 bg-yolk-100 dark:bg-purple-900/30 rounded-full text-yolk-600 dark:text-purple-400">
                         <flux:icon name="users" class="size-6" />
                     </div>
                 </div>
-                <p class="text-xs text-neutral-500 mt-4 font-medium">Inscrits au programme</p>
+                <p class="text-xs text-zinc-500 dark:text-neutral-500 mt-4 font-medium">Inscrits au programme</p>
             </div>
         </div>
 
-        <!-- Quick Access Grid -->
-        <div class="space-y-4">
-            <flux:heading size="lg">Gestion Rapide</flux:heading>
-            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
-                <a href="{{ route('clients.index') }}" wire:navigate class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3">
-                    <flux:icon name="users" class="size-6 mx-auto text-neutral-400 group-hover:text-primary" />
-                    <p class="text-sm font-medium">Clients</p>
-                </a>
-                <a href="{{ route('voitures.index') }}" wire:navigate class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3">
-                    <flux:icon name="truck" class="size-6 mx-auto text-neutral-400" />
-                    <p class="text-sm font-medium">Véhicules</p>
-                </a>
-                <a href="{{ route('entretiens.index') }}" wire:navigate class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3">
-                    <flux:icon name="wrench" class="size-6 mx-auto text-neutral-400" />
-                    <p class="text-sm font-medium">Entretiens</p>
-                </a>
-                <a href="{{ route('locations.index') }}" wire:navigate class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3">
-                    <flux:icon name="calendar" class="size-6 mx-auto text-neutral-400" />
-                    <p class="text-sm font-medium">Locations</p>
-                </a>
-                <a href="{{ route('paiements.index') }}" wire:navigate class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3">
-                    <flux:icon name="credit-card" class="size-6 mx-auto text-neutral-400" />
-                    <p class="text-sm font-medium">Paiements</p>
-                </a>
-                <a href="{{ route('factures.index') }}" wire:navigate class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3">
-                    <flux:icon name="document-text" class="size-6 mx-auto text-neutral-400" />
-                    <p class="text-sm font-medium">Factures</p>
-                </a>
-            </div>
-        </div>
-
-        <!-- Recent Activity Placeholder -->
+        <!-- Middle Row (Centered Links & Maintenance) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 p-6 rounded-2xl glass border border-neutral-200 dark:border-neutral-800">
-                <flux:heading size="lg" class="mb-4">Disponibilité de la Flotte</flux:heading>
-                <div class="h-64 relative overflow-hidden rounded-xl bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center border border-dashed border-neutral-300 dark:border-neutral-700">
-                    <x-placeholder-pattern class="absolute inset-0 size-full stroke-neutral-200 dark:stroke-neutral-800" />
-                    <p class="relative z-10 text-neutral-400 text-sm">Graphique d'utilisation bientôt disponible</p>
+            <div class="lg:col-span-2 space-y-4">
+                <flux:heading size="lg" class="text-yolk-600">Gestion Rapide</flux:heading>
+                <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                    <a href="{{ route('clients.index') }}" wire:navigate class="p-4 rounded-xl border border-yolk-200 dark:border-neutral-800 hover:bg-yolk-200 dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3 group">
+                        <flux:icon name="users" class="size-6 mx-auto text-yolk-600" />
+                        <p class="text-sm font-medium">Clients</p>
+                    </a>
+                    <a href="{{ route('voitures.index') }}" wire:navigate class="p-4 rounded-xl border border-yolk-200 dark:border-neutral-800 hover:bg-yolk-200 dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3 group">
+                        <flux:icon name="truck" class="size-6 mx-auto text-yolk-600" />
+                        <p class="text-sm font-medium">Véhicules</p>
+                    </a>
+                    <a href="{{ route('entretiens.index') }}" wire:navigate class="p-4 rounded-xl border border-yolk-200 dark:border-neutral-800 hover:bg-yolk-200 dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3 group">
+                        <flux:icon name="wrench" class="size-6 mx-auto text-yolk-600" />
+                        <p class="text-sm font-medium">Entretiens</p>
+                    </a>
+                    <a href="{{ route('locations.index') }}" wire:navigate class="p-4 rounded-xl border border-yolk-200 dark:border-neutral-800 hover:bg-yolk-200 dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3 group">
+                        <flux:icon name="calendar" class="size-6 mx-auto text-yolk-600" />
+                        <p class="text-sm font-medium">Locations</p>
+                    </a>
+                    <a href="{{ route('paiements.index') }}" wire:navigate class="p-4 rounded-xl border border-yolk-200 dark:border-neutral-800 hover:bg-yolk-200 dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3 group">
+                        <flux:icon name="credit-card" class="size-6 mx-auto text-yolk-600" />
+                        <p class="text-sm font-medium">Paiements</p>
+                    </a>
+                    <a href="{{ route('factures.index') }}" wire:navigate class="p-4 rounded-xl border border-yolk-200 dark:border-neutral-800 hover:bg-yolk-200 dark:hover:bg-neutral-800 hover:shadow-md transition-all text-center space-y-3 group">
+                        <flux:icon name="document-text" class="size-6 mx-auto text-yolk-600" />
+                        <p class="text-sm font-medium">Factures</p>
+                    </a>
                 </div>
             </div>
-            <div class="p-6 rounded-2xl glass border border-neutral-200 dark:border-neutral-800">
-                <flux:heading size="lg" class="mb-4">Alertes Maintenance</flux:heading>
-                <div class="space-y-4">
+
+            <div class="space-y-4">
+                <flux:heading size="lg" class="text-yolk-600">Maintenance</flux:heading>
+                <div class="space-y-3">
                     @forelse($stats['maintenance_cars'] as $car)
-                        <div class="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30">
-                            <flux:icon name="wrench" class="size-5 text-amber-600" />
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-yolk-100 dark:bg-amber-900/20 border border-yolk-200 dark:border-amber-900/30 group hover:bg-yolk-200 transition-colors">
+                            <flux:icon name="wrench" class="size-5 text-yolk-600" />
                             <div>
-                                <p class="text-sm font-medium text-amber-900 dark:text-amber-100">{{ $car->marque }} {{ $car->modele }}</p>
-                                <p class="text-xs text-amber-600 italic">Maintenance préventive</p>
+                                <p class="text-sm font-bold text-yolk-900 dark:text-amber-100">{{ $car->marque }} {{ $car->modele }}</p>
+                                <p class="text-xs text-yolk-600">En entretien</p>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-8">
-                            <flux:icon name="check-circle" class="size-12 mx-auto text-green-400 mb-2" />
-                            <p class="text-sm text-neutral-500">Tout les véhicules sont opérationnels</p>
+                        <div class="text-center py-10 rounded-xl border border-dashed border-yolk-300 opacity-60">
+                            <flux:icon name="check-circle" class="size-10 mx-auto text-yolk-400 mb-2" />
+                            <p class="text-xs text-zinc-500">Aucune alerte</p>
                         </div>
                     @endforelse
                 </div>
             </div>
         </div>
+
+        <!-- Bottom Section (Charts) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 p-6 rounded-2xl glass border border-yolk-200 dark:border-neutral-800">
+                <div class="flex items-center justify-between mb-6">
+                    <flux:heading size="lg" class="text-yolk-600 dark:text-white">Évolution des Revenus</flux:heading>
+                    <flux:badge variant="neutral" size="sm">6 derniers mois</flux:badge>
+                </div>
+                <div class="h-64">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="p-6 rounded-2xl glass border border-yolk-200 dark:border-neutral-800">
+                <flux:heading size="lg" class="mb-6 text-yolk-600 dark:text-white">Disponibilité de la Flotte</flux:heading>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="fleetChart"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <script>
+        document.addEventListener('livewire:navigated', () => { initCharts(); });
+        document.addEventListener('DOMContentLoaded', () => { initCharts(); });
+
+        function initCharts() {
+            const ctxRevenue = document.getElementById('revenueChart');
+            const ctxFleet = document.getElementById('fleetChart');
+            if (!ctxRevenue || !ctxFleet) return;
+
+            if (window.revenueChartInstance) window.revenueChartInstance.destroy();
+            if (window.fleetChartInstance) window.fleetChartInstance.destroy();
+
+            window.revenueChartInstance = new Chart(ctxRevenue, {
+                type: 'line',
+                data: {
+                    labels: {!! json_encode($months) !!},
+                    datasets: [{
+                        label: 'Revenu (' + '{{ \App\Helpers\CurrencyHelper::getCurrency() === 'EUR' ? "€" : "Ar" }}' + ')',
+                        data: {!! json_encode($revenues) !!},
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#fbbf24',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            window.fleetChartInstance = new Chart(ctxFleet, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Disponible', 'Louée', 'Maintenance'],
+                    datasets: [{
+                        data: [{!! $fleet_data['disponible'] !!}, {!! $fleet_data['louée'] !!}, {!! $fleet_data['entretien'] !!}],
+                        backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+    </script>
 </x-layouts::app>

@@ -18,6 +18,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('locations', LocationController::class);
     Route::resource('paiements', PaiementController::class);
     Route::resource('factures', FactureController::class);
-});
+
+    Route::post('currency-switch', function (Illuminate\Http\Request $request) {
+            $currency = $request->input('currency', 'EUR');
+            if (in_array($currency, ['EUR', 'MGA'])) {
+                session(['currency' => $currency]);
+            }
+            return back();
+        }
+        )->name('currency.switch');    });
 
 require __DIR__ . '/settings.php';

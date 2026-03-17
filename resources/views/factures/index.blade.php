@@ -28,7 +28,7 @@
                             <flux:table.cell class="font-medium">{{ $facture->numero_facture }}</flux:table.cell>
                             <flux:table.cell>{{ $facture->location->client->nom }} {{ $facture->location->client->prenom }}</flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($facture->date_facture)->format('d/m/Y') }}</flux:table.cell>
-                            <flux:table.cell>{{ number_format($facture->montant_total, 2) }} €</flux:table.cell>
+                            <flux:table.cell>{{ \App\Helpers\CurrencyHelper::format($facture->montant_total) }}</flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge variant="{{ $facture->statut === 'payée' ? 'success' : ($facture->statut === 'en attente' ? 'warning' : 'danger') }}" inset="left">
                                     {{ ucfirst($facture->statut) }}

@@ -28,7 +28,7 @@
                             <flux:table.cell>{{ $voiture->marque }}</flux:table.cell>
                             <flux:table.cell>{{ $voiture->modele }}</flux:table.cell>
                             <flux:table.cell>{{ $voiture->immatriculation }}</flux:table.cell>
-                            <flux:table.cell>{{ number_format($voiture->prix_journalier, 2) }} €</flux:table.cell>
+                            <flux:table.cell>{{ \App\Helpers\CurrencyHelper::format($voiture->prix_journalier) }} / jour</flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge variant="{{ $voiture->statut === 'disponible' ? 'success' : ($voiture->statut === 'louée' ? 'warning' : 'danger') }}" inset="left">
                                     {{ ucfirst($voiture->statut) }}

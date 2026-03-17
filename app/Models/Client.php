@@ -8,11 +8,16 @@ class Client extends Model
 {
     //
     protected $fillable = [
+        "type",
         "nom",
         "prenom",
+        "raison_sociale",
         "date_naissance",
         "telephone",
         "adresse",
+        "cin",
+        "nif",
+        "stat",
     ];
 
     public function locations()

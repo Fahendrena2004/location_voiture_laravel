@@ -30,7 +30,7 @@
                             <flux:table.cell>{{ $location->voiture->marque }} {{ $location->voiture->modele }}</flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }}</flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($location->date_fin)->format('d/m/Y') }}</flux:table.cell>
-                            <flux:table.cell>{{ number_format($location->tarif_total, 2) }} €</flux:table.cell>
+                            <flux:table.cell>{{ \App\Helpers\CurrencyHelper::format($location->tarif_total) }}</flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge variant="{{ $location->statut === 'en cours' ? 'warning' : ($location->statut === 'terminée' ? 'success' : 'danger') }}" inset="left">
                                     {{ ucfirst($location->statut) }}

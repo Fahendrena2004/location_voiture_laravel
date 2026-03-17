@@ -1,17 +1,37 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
+        <style>
+            :root {
+                @if(App\Helpers\CurrencyHelper::getCurrency() === 'EUR')
+                    --color-accent: #2563eb !important;
+                    --color-accent-content: #2563eb !important;
+                @else
+                    --color-accent: #dc2626 !important;
+                    --color-accent-content: #dc2626 !important;
+                @endif
+                --color-primary: var(--color-accent) !important;
+            }
+            {{-- Also override current items and specific flux elements --}}
+            [data-flux-item][data-current], .bg-primary, .text-primary {
+                background-color: var(--color-accent) !important;
+            }
+            .text-accent, .fill-accent {
+                color: var(--color-accent) !important;
+                fill: var(--color-accent) !important;
+            }
+        </style>
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen">
+        <flux:sidebar sticky collapsible="mobile" class="border-e border-yolk-200 bg-yolk-100 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                <flux:sidebar.group :heading="__('Menu Principal')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
@@ -37,6 +57,18 @@
             </flux:sidebar.nav>
 
             <flux:spacer />
+
+            <div class="px-2 mb-4">
+                <form action="{{ route('currency.switch') }}" method="POST" class="flex items-center gap-1 p-1 bg-yolk-200/50 dark:bg-zinc-800 rounded-lg">
+                    @csrf
+                    <button type="submit" name="currency" value="EUR" class="flex-1 py-1 px-2 text-xs font-bold rounded-md transition-all {{ App\Helpers\CurrencyHelper::getCurrency() === 'EUR' ? 'bg-blue-600 text-white shadow-md' : 'text-yolk-600 hover:bg-yolk-200' }}">
+                        EUR (€)
+                    </button>
+                    <button type="submit" name="currency" value="MGA" class="flex-1 py-1 px-2 text-xs font-bold rounded-md transition-all {{ App\Helpers\CurrencyHelper::getCurrency() === 'MGA' ? 'bg-red-600 text-white shadow-md' : 'text-yolk-600 hover:bg-yolk-200' }}">
+                        MGA (Ar)
+                    </button>
+                </form>
+            </div>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>

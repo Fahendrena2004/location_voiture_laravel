@@ -14,7 +14,8 @@
         <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
             <flux:table>
                 <flux:table.columns>
-                    <flux:table.column>Nom</flux:table.column>
+                    <flux:table.column>Type</flux:table.column>
+                    <flux:table.column>Nom / Raison Sociale</flux:table.column>
                     <flux:table.column>Prénom</flux:table.column>
                     <flux:table.column>Téléphone</flux:table.column>
                     <flux:table.column>Actions</flux:table.column>
@@ -23,8 +24,15 @@
                 <flux:table.rows>
                     @foreach($clients as $client)
                         <flux:table.row>
-                            <flux:table.cell>{{ $client->nom }}</flux:table.cell>
-                            <flux:table.cell>{{ $client->prenom }}</flux:table.cell>
+                            <flux:table.cell>
+                                @if($client->type === 'personne')
+                                    <flux:badge icon="user" variant="ghost" size="sm" class="text-blue-600">Pers.</flux:badge>
+                                @else
+                                    <flux:badge icon="building-office" variant="ghost" size="sm" class="text-emerald-600">Assoc.</flux:badge>
+                                @endif
+                            </flux:table.cell>
+                            <flux:table.cell class="font-medium text-zinc-900 dark:text-white">{{ $client->nom }}</flux:table.cell>
+                            <flux:table.cell>{{ $client->prenom ?? '-' }}</flux:table.cell>
                             <flux:table.cell>{{ $client->telephone }}</flux:table.cell>
                             <flux:table.cell>
                                 <div class="flex gap-2">
