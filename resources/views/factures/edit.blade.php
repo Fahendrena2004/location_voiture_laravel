@@ -11,13 +11,16 @@
             
             <flux:input name="numero_facture" label="Numéro de Facture" value="{{ old('numero_facture', $facture->numero_facture) }}" required />
 
-            <flux:select name="location_id" label="Location" required>
-                @foreach($locations as $location)
-                    <flux:select.option value="{{ $location->id }}" {{ old('location_id', $facture->location_id) == $location->id ? 'selected' : '' }}>
-                        {{ $location->client->nom }} {{ $location->client->prenom }} - {{ $location->voiture->marque }} ({{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }})
-                    </flux:select.option>
-                @endforeach
-            </flux:select>
+            <flux:field>
+                <flux:label>Location</flux:label>
+                <select name="location_id" required class="w-full bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm">
+                    @foreach($locations as $location)
+                        <option value="{{ $location->id }}" {{ old('location_id', $facture->location_id) == $location->id ? 'selected' : '' }}>
+                            {{ $location->client->nom }} {{ $location->client->prenom }} - {{ $location->voiture->marque }} ({{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }})
+                        </option>
+                    @endforeach
+                </select>
+            </flux:field>
 
             <flux:input type="date" name="date_facture" label="Date de la facture" value="{{ old('date_facture', $facture->date_facture) }}" required />
 

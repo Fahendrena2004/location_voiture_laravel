@@ -19,7 +19,9 @@
             <div class="grid grid-cols-2 gap-4 border-b pb-4 border-neutral-100 dark:border-neutral-700">
                 <div>
                     <flux:label class="text-xs uppercase text-neutral-500">{{ $client->type === 'personne' ? 'Nom' : 'Raison Sociale' }}</flux:label>
-                    <div class="font-medium text-lg">{{ $client->nom }}</div>
+                    <div class="font-medium text-lg">
+                        {{ $client->type === 'association' ? $client->raison_sociale : $client->nom }}
+                    </div>
                 </div>
                 @if($client->type === 'personne')
                 <div>

@@ -7,12 +7,14 @@ use App\Http\Controllers\EntretienController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\FactureController;
+use App\Http\Controllers\ChauffeurController;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::resource('clients', ClientController::class);
+    Route::resource('chauffeurs', ChauffeurController::class);
     Route::resource('voitures', VoitureController::class);
     Route::resource('entretiens', EntretienController::class);
     Route::resource('locations', LocationController::class);
@@ -26,6 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             }
             return back();
         }
-        )->name('currency.switch');    });
+        )->name('currency.switch');
+    });
 
 require __DIR__ . '/settings.php';

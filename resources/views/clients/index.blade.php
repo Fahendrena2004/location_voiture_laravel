@@ -31,8 +31,10 @@
                                     <flux:badge icon="building-office" variant="ghost" size="sm" class="text-emerald-600">Assoc.</flux:badge>
                                 @endif
                             </flux:table.cell>
-                            <flux:table.cell class="font-medium text-zinc-900 dark:text-white">{{ $client->nom }}</flux:table.cell>
-                            <flux:table.cell>{{ $client->prenom ?? '-' }}</flux:table.cell>
+                            <flux:table.cell class="font-medium text-zinc-900 dark:text-white">
+                                {{ $client->type === 'association' ? $client->raison_sociale : $client->nom }}
+                            </flux:table.cell>
+                            <flux:table.cell>{{ $client->type === 'personne' ? ($client->prenom ?? '-') : '-' }}</flux:table.cell>
                             <flux:table.cell>{{ $client->telephone }}</flux:table.cell>
                             <flux:table.cell>
                                 <div class="flex gap-2">

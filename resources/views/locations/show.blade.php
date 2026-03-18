@@ -49,7 +49,10 @@
             <div class="grid grid-cols-2 gap-4 border-b pb-4 border-neutral-100 dark:border-neutral-700">
                 <div>
                     <flux:label class="text-xs uppercase text-neutral-500">Tarif Total</flux:label>
-                    <div class="font-medium">{{ number_format($location->tarif_total, 2) }} €</div>
+                    <div class="font-medium">
+                        {{ number_format($location->tarif_total, 2) }} 
+                        {{ App\Helpers\CurrencyHelper::getCurrency() === 'MGA' ? 'Ar' : '€' }}
+                    </div>
                 </div>
                 <div>
                     <flux:label class="text-xs uppercase text-neutral-500">Statut</flux:label>
@@ -60,6 +63,22 @@
                     </div>
                 </div>
             </div>
+
+            @if($location->avec_chauffeur)
+            <div class="border-b pb-4 border-neutral-100 dark:border-neutral-700">
+                <flux:label class="text-xs uppercase text-neutral-500">Chauffeur</flux:label>
+                <div class="font-medium">
+                    @if($location->chauffeur)
+                        <a href="{{ route('chauffeurs.show', $location->chauffeur) }}" wire:navigate class="text-primary hover:underline">
+                            {{ $location->chauffeur->nom }} {{ $location->chauffeur->prenom }}
+                        </a>
+                        <span class="text-neutral-500 text-sm italic ml-2">({{ $location->chauffeur->telephone }})</span>
+                    @else
+                        <span class="text-red-500 italic">Chauffeur non assigné</span>
+                    @endif
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </x-layouts::app>

@@ -18,14 +18,18 @@
         <form action="{{ route('factures.store') }}" method="POST" class="space-y-6">
             @csrf
             
-            <flux:select name="location_id" label="Sélectionner une Location" placeholder="Choisir une location..." required>
-                @foreach($locations as $location)
-                    <flux:select.option value="{{ $location->id }}" {{ (old('location_id') == $location->id || request('location_id') == $location->id) ? 'selected' : '' }}>
-                        {{ $location->client->nom }} {{ $location->client->prenom }} - {{ $location->voiture->marque }} ({{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }}) - {{ number_format($location->tarif_total, 2) }} €
-                    </flux:select.option>
-                @endforeach
-            </flux:select>
-            @error('location_id') <p class="text-sm text-red-500 mt-1">{{ $message }}</p> @enderror
+            <flux:field>
+                <flux:label>Sélectionner une Location</flux:label>
+                <select name="location_id" required class="w-full bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm">
+                    <option value="" disabled selected>Choisir une location...</option>
+                    @foreach($locations as $location)
+                        <option value="{{ $location->id }}" {{ (old('location_id') == $location->id || request('location_id') == $location->id) ? 'selected' : '' }}>
+                            {{ $location->client->nom }} {{ $location->client->prenom }} - {{ $location->voiture->marque }} ({{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }}) - {{ number_format($location->tarif_total, 2) }} €
+                        </option>
+                    @endforeach
+                </select>
+                @error('location_id') <flux:error>{{ $message }}</flux:error> @enderror
+            </flux:field>
 
             @if($locations->isEmpty())
                 <flux:text color="danger">Toutes les locations ont déjà une facture ou il n'y a pas de locations.</flux:text>

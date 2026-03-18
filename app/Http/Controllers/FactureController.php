@@ -33,7 +33,6 @@ class FactureController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->all());
         $validated = $request->validate([
             'location_id' => 'required|exists:locations,id|unique:factures,location_id',
             'date_facture' => 'required|date',

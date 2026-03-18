@@ -38,6 +38,9 @@
                     <flux:sidebar.item icon="users" :href="route('clients.index')" :current="request()->routeIs('clients.*')" wire:navigate>
                         {{ __('Clients') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="user-group" :href="route('chauffeurs.index')" :current="request()->routeIs('chauffeurs.*')" wire:navigate>
+                        {{ __('Chauffeurs') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="truck" :href="route('voitures.index')" :current="request()->routeIs('voitures.*')" wire:navigate>
                         {{ __('Voitures') }}
                     </flux:sidebar.item>

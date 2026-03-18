@@ -9,6 +9,8 @@ class Location extends Model
     protected $fillable = [
         'client_id',
         'voiture_id',
+        'avec_chauffeur',
+        'chauffeur_id',
         'date_debut',
         'date_fin',
         'tarif_total',
@@ -23,6 +25,11 @@ class Location extends Model
     public function voiture()
     {
         return $this->belongsTo(Voiture::class);
+    }
+
+    public function chauffeur()
+    {
+        return $this->belongsTo(Chauffeur::class);
     }
 
     public function paiements()

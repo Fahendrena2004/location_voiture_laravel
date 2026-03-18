@@ -19,6 +19,7 @@
                     <flux:table.column>Début</flux:table.column>
                     <flux:table.column>Fin</flux:table.column>
                     <flux:table.column>Tarif Total</flux:table.column>
+                    <flux:table.column>Chauffeur</flux:table.column>
                     <flux:table.column>Statut</flux:table.column>
                     <flux:table.column>Actions</flux:table.column>
                 </flux:table.columns>
@@ -31,6 +32,16 @@
                             <flux:table.cell>{{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }}</flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($location->date_fin)->format('d/m/Y') }}</flux:table.cell>
                             <flux:table.cell>{{ \App\Helpers\CurrencyHelper::format($location->tarif_total) }}</flux:table.cell>
+                            <flux:table.cell>
+                                @if($location->avec_chauffeur && $location->chauffeur)
+                                    <div class="flex items-center gap-1">
+                                        <flux:icon name="user" size="sm" class="text-neutral-400" />
+                                        <span>{{ $location->chauffeur->nom }}</span>
+                                    </div>
+                                @else
+                                    <flux:badge variant="ghost" size="sm">Sans chauffeur</flux:badge>
+                                @endif
+                            </flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge variant="{{ $location->statut === 'en cours' ? 'warning' : ($location->statut === 'terminée' ? 'success' : 'danger') }}" inset="left">
                                     {{ ucfirst($location->statut) }}
