@@ -121,7 +121,8 @@
             <div class="space-y-4">
                 <flux:heading size="lg" class="text-yolk-600">Maintenance</flux:heading>
                 <div class="space-y-3">
-                    @forelse($stats['maintenance_cars'] as $car)
+                    @php $maintenance_cars = $stats['maintenance_cars']; @endphp
+                    @forelse ($maintenance_cars as $car)
                         <div class="flex items-center gap-3 p-3 rounded-xl bg-yolk-100 dark:bg-amber-900/20 border border-yolk-200 dark:border-amber-900/30 group hover:bg-yolk-200 transition-colors">
                             <flux:icon name="wrench" class="size-5 text-yolk-600" />
                             <div>

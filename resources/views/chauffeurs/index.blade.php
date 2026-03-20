@@ -11,7 +11,7 @@
             </div>
         @endif
 
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 sm:px-6">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>{{ __('Nom') }}</flux:table.column>
@@ -40,12 +40,12 @@
                             </flux:table.cell>
                             <flux:table.cell>
                                 <div class="flex gap-2">
-                                    <flux:button href="{{ route('chauffeurs.show', $chauffeur) }}" wire:navigate icon="eye" size="sm" variant="ghost" />
-                                    <flux:button href="{{ route('chauffeurs.edit', $chauffeur) }}" wire:navigate icon="pencil" size="sm" variant="ghost" />
+                                    <flux:button href="{{ route('chauffeurs.show', $chauffeur) }}" wire:navigate icon="eye" size="sm" variant="ghost" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300" />
+                                    <flux:button href="{{ route('chauffeurs.edit', $chauffeur) }}" wire:navigate icon="pencil" size="sm" variant="ghost" class="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300" />
                                     <form action="{{ route('chauffeurs.destroy', $chauffeur) }}" method="POST" onsubmit="return confirm('{{ __('Êtes-vous sûr de vouloir supprimer ce chauffeur ?') }}')">
                                         @csrf
                                         @method('DELETE')
-                                        <flux:button type="submit" icon="trash" size="sm" variant="ghost" class="text-red-500 hover:text-red-600" />
+                                        <flux:button type="submit" icon="trash" size="sm" variant="ghost" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />
                                     </form>
                                 </div>
                             </flux:table.cell>

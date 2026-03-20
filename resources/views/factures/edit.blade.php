@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Modifier Facture')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl max-w-2xl mx-auto">
         <div class="flex items-center gap-4">
-            <flux:button href="{{ route('factures.index') }}" wire:navigate icon="chevron-left" variant="ghost" />
+            <flux:button as="a" href="{{ route('factures.index') }}" wire:navigate icon="chevron-left" variant="ghost" />
             <flux:heading size="xl">Modifier la Facture</flux:heading>
         </div>
 
@@ -33,7 +33,7 @@
             </flux:select>
 
             <div class="flex justify-end gap-2 mt-8">
-                <flux:button href="{{ route('factures.index') }}" wire:navigate variant="ghost">Annuler</flux:button>
+                <flux:button as="a" href="{{ route('factures.index') }}" wire:navigate variant="ghost">Annuler</flux:button>
                 <flux:button type="submit" variant="primary">Mettre à jour</flux:button>
             </div>
         </form>

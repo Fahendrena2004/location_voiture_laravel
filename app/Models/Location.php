@@ -13,7 +13,9 @@ class Location extends Model
         'chauffeur_id',
         'date_debut',
         'date_fin',
+        'date_retour',
         'tarif_total',
+        'penalite',
         'statut',
     ];
 

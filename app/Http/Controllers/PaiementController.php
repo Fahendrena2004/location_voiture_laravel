@@ -35,7 +35,10 @@ class PaiementController extends Controller
             'location_id' => 'required|exists:locations,id',
             'date_paiement' => 'required|date',
             'montant' => 'required|numeric|min:0',
-            'mode_paiement' => 'required|in:espèces,carte,virement',
+            'mode_paiement' => 'required|in:espèces,bancaire,mobile_money',
+            'numero_mobile' => 'nullable|required_if:mode_paiement,mobile_money|string|max:50',
+            'numero_bordereau' => 'nullable|required_if:mode_paiement,bancaire|string|max:100',
+            'nom_banque' => 'nullable|required_if:mode_paiement,bancaire|string|max:100',
         ]);
 
         Paiement::create($validated);
@@ -70,7 +73,10 @@ class PaiementController extends Controller
             'location_id' => 'required|exists:locations,id',
             'date_paiement' => 'required|date',
             'montant' => 'required|numeric|min:0',
-            'mode_paiement' => 'required|in:espèces,carte,virement',
+            'mode_paiement' => 'required|in:espèces,bancaire,mobile_money',
+            'numero_mobile' => 'nullable|required_if:mode_paiement,mobile_money|string|max:50',
+            'numero_bordereau' => 'nullable|required_if:mode_paiement,bancaire|string|max:100',
+            'nom_banque' => 'nullable|required_if:mode_paiement,bancaire|string|max:100',
         ]);
 
         $paiement->update($validated);

@@ -7,9 +7,9 @@
             </div>
             <div class="flex gap-2">
                 @if($location->facture)
-                    <flux:button href="{{ route('factures.show', $location->facture) }}" wire:navigate icon="document-text" variant="ghost">Voir Facture</flux:button>
+                    <flux:button as="a" href="{{ route('factures.show', $location->facture) }}" wire:navigate icon="document-text" variant="ghost">Voir Facture</flux:button>
                 @else
-                    <flux:button href="{{ route('factures.create', ['location_id' => $location->id]) }}" wire:navigate icon="plus" variant="ghost">Générer Facture</flux:button>
+                    <flux:button as="a" href="{{ route('factures.create', ['location_id' => $location->id]) }}" wire:navigate icon="plus" variant="ghost">Générer Facture</flux:button>
                 @endif
                 <flux:button href="{{ route('locations.edit', $location) }}" wire:navigate icon="pencil" variant="primary">Modifier</flux:button>
             </div>
@@ -45,6 +45,24 @@
                     <div class="font-medium">{{ \Carbon\Carbon::parse($location->date_fin)->format('d/m/Y') }}</div>
                 </div>
             </div>
+
+            @if($location->date_retour)
+            <div class="grid grid-cols-2 gap-4 border-b pb-4 border-neutral-100 dark:border-neutral-700">
+                <div>
+                    <flux:label class="text-xs uppercase text-neutral-500">Date de retour réelle</flux:label>
+                    <div class="font-medium">{{ \Carbon\Carbon::parse($location->date_retour)->format('d/m/Y') }}</div>
+                </div>
+                @if($location->penalite > 0)
+                <div>
+                    <flux:label class="text-xs uppercase text-red-500">Pénalité de retard</flux:label>
+                    <div class="font-medium text-red-500">
+                        + {{ number_format($location->penalite, 2) }} 
+                        {{ App\Helpers\CurrencyHelper::getCurrency() === 'MGA' ? 'Ar' : '€' }}
+                    </div>
+                </div>
+                @endif
+            </div>
+            @endif
 
             <div class="grid grid-cols-2 gap-4 border-b pb-4 border-neutral-100 dark:border-neutral-700">
                 <div>

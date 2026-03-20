@@ -43,8 +43,20 @@ class FactureController extends Controller
             $location = Location::find($validated['location_id']);
 
             // Generate unique invoice number (e.g., FACT-2026-001)
-            $count = Facture::whereYear('date_facture', date('Y', strtotime($validated['date_facture'])))->count() + 1;
-            $numero_facture = 'FACT-' . date('Y', strtotime($validated['date_facture'])) . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+            $year = date('Y', strtotime($validated['date_facture']));
+            $lastFacture = Facture::whereYear('date_facture', $year)
+                ->orderBy('numero_facture', 'desc')
+                ->first();
+
+            $nextSeq = 1;
+            if ($lastFacture) {
+                // Extract sequence number from FACT-YYYY-NNN
+                $parts = explode('-', $lastFacture->numero_facture);
+                $lastSeq = (int)end($parts);
+                $nextSeq = $lastSeq + 1;
+            }
+
+            $numero_facture = 'FACT-' . $year . '-' . str_pad($nextSeq, 3, '0', STR_PAD_LEFT);
 
             $facture = Facture::create([
                 'location_id' => $validated['location_id'],

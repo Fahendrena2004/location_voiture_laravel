@@ -11,6 +11,9 @@ class Paiement extends Model
         'date_paiement',
         'montant',
         'mode_paiement',
+        'numero_mobile',
+        'numero_bordereau',
+        'nom_banque',
     ];
 
     public function location()

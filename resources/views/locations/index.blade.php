@@ -11,7 +11,7 @@
             </div>
         @endif
 
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 sm:px-6">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>Client</flux:table.column>
@@ -27,34 +27,46 @@
                 <flux:table.rows>
                     @foreach($locations as $location)
                         <flux:table.row>
-                            <flux:table.cell>{{ $location->client->nom }} {{ $location->client->prenom }}</flux:table.cell>
-                            <flux:table.cell>{{ $location->voiture->marque }} {{ $location->voiture->modele }}</flux:table.cell>
+                            <flux:table.cell>
+                                <div class="truncate" style="max-width: 200px;" title="{{ $location->client->nom }} {{ $location->client->prenom }}">
+                                    {{ $location->client->nom }} {{ $location->client->prenom }}
+                                </div>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <div class="truncate" style="max-width: 300px;" title="{{ $location->voiture->marque }} {{ $location->voiture->modele }}">
+                                    {{ $location->voiture->marque }} {{ $location->voiture->modele }}
+                                </div>
+                            </flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }}</flux:table.cell>
                             <flux:table.cell>{{ \Carbon\Carbon::parse($location->date_fin)->format('d/m/Y') }}</flux:table.cell>
                             <flux:table.cell>{{ \App\Helpers\CurrencyHelper::format($location->tarif_total) }}</flux:table.cell>
                             <flux:table.cell>
                                 @if($location->avec_chauffeur && $location->chauffeur)
-                                    <div class="flex items-center gap-1">
+                                    <div class="flex items-center justify-center gap-1">
                                         <flux:icon name="user" size="sm" class="text-neutral-400" />
                                         <span>{{ $location->chauffeur->nom }}</span>
                                     </div>
                                 @else
-                                    <flux:badge variant="ghost" size="sm">Sans chauffeur</flux:badge>
+                                    <div class="flex justify-start">
+                                        <flux:badge variant="ghost" size="sm">Sans chauffeur</flux:badge>
+                                    </div>
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge variant="{{ $location->statut === 'en cours' ? 'warning' : ($location->statut === 'terminée' ? 'success' : 'danger') }}" inset="left">
-                                    {{ ucfirst($location->statut) }}
-                                </flux:badge>
+                                <div class="flex justify-start">
+                                    <flux:badge variant="{{ $location->statut === 'en cours' ? 'warning' : ($location->statut === 'terminée' ? 'success' : 'danger') }}" inset="left">
+                                        {{ ucfirst($location->statut) }}
+                                    </flux:badge>
+                                </div>
                             </flux:table.cell>
                             <flux:table.cell>
                                 <div class="flex gap-2">
-                                    <flux:button href="{{ route('locations.show', $location) }}" wire:navigate icon="eye" size="sm" variant="ghost" />
-                                    <flux:button href="{{ route('locations.edit', $location) }}" wire:navigate icon="pencil" size="sm" variant="ghost" />
+                                    <flux:button href="{{ route('locations.show', $location) }}" wire:navigate icon="eye" size="sm" variant="ghost" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300" />
+                                    <flux:button href="{{ route('locations.edit', $location) }}" wire:navigate icon="pencil" size="sm" variant="ghost" class="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300" />
                                     <form action="{{ route('locations.destroy', $location) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr ?')">
                                         @csrf
                                         @method('DELETE')
-                                        <flux:button type="submit" icon="trash" size="sm" variant="ghost" />
+                                        <flux:button type="submit" icon="trash" size="sm" variant="ghost" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />
                                     </form>
                                 </div>
                             </flux:table.cell>

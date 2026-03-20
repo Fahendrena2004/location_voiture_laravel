@@ -7,6 +7,9 @@ use App\Models\Client;
 use App\Models\Voiture;
 use App\Models\Chauffeur;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreLocationRequest;
+use App\Http\Requests\UpdateLocationRequest;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class LocationController extends Controller
@@ -34,18 +37,9 @@ class LocationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreLocationRequest $request)
     {
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'voiture_id' => 'required|exists:voitures,id',
-            'avec_chauffeur' => 'required|boolean',
-            'chauffeur_id' => 'required_if:avec_chauffeur,1|nullable|exists:chauffeurs,id',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date|after_or_equal:date_debut',
-            'tarif_total' => 'required|numeric|min:0',
-            'statut' => 'required|in:en cours,terminée,annulée',
-        ]);
+        $validated = $request->validated();
 
         $voiture = Voiture::find($validated['voiture_id']);
 
@@ -62,15 +56,31 @@ class LocationController extends Controller
             }
         }
 
-        $location = Location::create($validated);
-
-        // Update car status if rental is "en cours"
-        if ($location->statut === 'en cours') {
-            $location->voiture->update(['statut' => 'louée']);
-            if ($location->avec_chauffeur && $location->chauffeur_id) {
-                $location->chauffeur->update(['disponible' => false]);
+        $penalite = 0;
+        if ($validated['statut'] === 'terminée' && !empty($validated['date_retour'])) {
+            $dateFin = Carbon::parse($validated['date_fin']);
+            $dateRetour = Carbon::parse($validated['date_retour']);
+            if ($dateRetour->gt($dateFin)) {
+                $penalite = $dateRetour->diffInDays($dateFin) * 10;
             }
         }
+        $validated['penalite'] = $penalite;
+
+        if (!$validated['avec_chauffeur']) {
+            $validated['chauffeur_id'] = null;
+        }
+
+        DB::transaction(function () use ($validated, $voiture) {
+            $location = Location::create($validated);
+
+            // Update car status if rental is "en cours"
+            if ($location->statut === 'en cours') {
+                $voiture->update(['statut' => 'louée']);
+                if ($location->avec_chauffeur && $location->chauffeur_id) {
+                    Chauffeur::where('id', $location->chauffeur_id)->update(['disponible' => false]);
+                }
+            }
+        });
 
         return redirect()->route('locations.index')->with('success', 'Location créée avec succès.');
     }
@@ -100,37 +110,38 @@ class LocationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Location $location)
+    public function update(UpdateLocationRequest $request, Location $location)
     {
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'voiture_id' => 'required|exists:voitures,id',
-            'avec_chauffeur' => 'required|boolean',
-            'chauffeur_id' => 'required_if:avec_chauffeur,1|nullable|exists:chauffeurs,id',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date|after_or_equal:date_debut',
-            'tarif_total' => 'required|numeric|min:0',
-            'statut' => 'required|in:en cours,terminée,annulée',
-        ]);
+        $validated = $request->validated();
+
+        $penalite = 0;
+        if ($validated['statut'] === 'terminée' && !empty($validated['date_retour'])) {
+            $dateFin = Carbon::parse($validated['date_fin']);
+            $dateRetour = Carbon::parse($validated['date_retour']);
+            if ($dateRetour->gt($dateFin)) {
+                $penalite = $dateRetour->diffInDays($dateFin) * 10;
+            }
+        }
+        $validated['penalite'] = $penalite;
+
+        if (!$validated['avec_chauffeur']) {
+            $validated['chauffeur_id'] = null;
+        }
 
         $oldVoiture = $location->voiture;
         $newVoiture = Voiture::find($validated['voiture_id']);
         $oldChauffeur = $location->chauffeur;
         $newChauffeurId = $validated['chauffeur_id'];
 
-        // Manage Car Status change
+        // Manage Car Status change checks
         if ($oldVoiture->id != $validated['voiture_id']) {
-            $oldVoiture->update(['statut' => 'disponible']);
             if ($validated['statut'] === 'en cours' && $newVoiture->statut !== 'disponible') {
                 return back()->withInput()->withErrors(['voiture_id' => 'Le véhicule sélectionné n\'est pas disponible.']);
             }
         }
 
-        // Manage Chauffeur Status change
+        // Manage Chauffeur Status change checks
         if ($location->chauffeur_id != $newChauffeurId) {
-            if ($oldChauffeur) {
-                $oldChauffeur->update(['disponible' => true]);
-            }
             if ($newChauffeurId && $validated['statut'] === 'en cours') {
                 $newChauffeur = Chauffeur::find($newChauffeurId);
                 if (!$newChauffeur->disponible) {
@@ -139,21 +150,32 @@ class LocationController extends Controller
             }
         }
 
-        $location->update($validated);
+        DB::transaction(function () use ($validated, $location, $oldVoiture, $newVoiture, $oldChauffeur, $newChauffeurId) {
+            if ($oldVoiture->id != $validated['voiture_id']) {
+                $oldVoiture->update(['statut' => 'disponible']);
+            }
 
-        // Final synchronization
-        if ($location->statut === 'en cours') {
-            $location->voiture->update(['statut' => 'louée']);
-            if ($location->avec_chauffeur && $location->chauffeur_id) {
-                $location->chauffeur->update(['disponible' => false]);
+            if ($location->chauffeur_id != $newChauffeurId) {
+                if ($oldChauffeur) {
+                    $oldChauffeur->update(['disponible' => true]);
+                }
             }
-        }
-        else {
-            $location->voiture->update(['statut' => 'disponible']);
-            if ($location->chauffeur_id) {
-                $location->chauffeur->update(['disponible' => true]);
+
+            $location->update($validated);
+
+            // Final synchronization
+            if ($location->statut === 'en cours') {
+                $newVoiture->update(['statut' => 'louée']);
+                if ($location->avec_chauffeur && $location->chauffeur_id) {
+                    Chauffeur::where('id', $location->chauffeur_id)->update(['disponible' => false]);
+                }
+            } else {
+                $newVoiture->update(['statut' => 'disponible']);
+                if ($location->chauffeur_id) {
+                    Chauffeur::where('id', $location->chauffeur_id)->update(['disponible' => true]);
+                }
             }
-        }
+        });
 
         return redirect()->route('locations.index')->with('success', 'Location mise à jour avec succès.');
     }
