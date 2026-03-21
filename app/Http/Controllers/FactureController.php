@@ -14,7 +14,15 @@ class FactureController extends Controller
      */
     public function index()
     {
-        $factures = Facture::with('location.client', 'location.voiture')->get();
+        $query = Facture::with('location.client', 'location.voitures', 'location.chauffeurs');
+
+        if (auth()->user()->isClient()) {
+            $query->whereHas('location.client', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+
+        $factures = $query->get();
         return view('factures.index', compact('factures'));
     }
 
@@ -24,7 +32,7 @@ class FactureController extends Controller
     public function create()
     {
         // Get locations that don't have a facture yet
-        $locations = Location::doesntHave('facture')->with('client', 'voiture')->get();
+        $locations = Location::doesntHave('facture')->with('client', 'voitures', 'chauffeurs')->get();
         return view('factures.create', compact('locations'));
     }
 
@@ -52,7 +60,7 @@ class FactureController extends Controller
             if ($lastFacture) {
                 // Extract sequence number from FACT-YYYY-NNN
                 $parts = explode('-', $lastFacture->numero_facture);
-                $lastSeq = (int)end($parts);
+                $lastSeq = (int) end($parts);
                 $nextSeq = $lastSeq + 1;
             }
 
@@ -67,8 +75,7 @@ class FactureController extends Controller
             ]);
 
             return redirect()->route('factures.show', $facture)->with('success', 'Facture générée avec succès.');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return back()->withInput()->withErrors(['error' => 'Erreur lors de la génération : ' . $e->getMessage()]);
         }
     }
@@ -78,7 +85,10 @@ class FactureController extends Controller
      */
     public function show(Facture $facture)
     {
-        $facture->load('location.client', 'location.voiture', 'location.paiements');
+        if (auth()->user()->isClient() && $facture->location->client->user_id !== auth()->id()) {
+            abort(403);
+        }
+        $facture->load('location.client', 'location.voitures', 'location.chauffeurs', 'location.paiements');
         return view('factures.show', compact('facture'));
     }
 
@@ -87,7 +97,7 @@ class FactureController extends Controller
      */
     public function edit(Facture $facture)
     {
-        $locations = Location::all();
+        $locations = Location::with('client', 'voitures')->get();
         return view('factures.edit', compact('facture', 'locations'));
     }
 

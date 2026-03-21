@@ -21,7 +21,10 @@ class ClientController extends Controller
      */
     public function create()
     {
-        return view("clients.create");
+        $users = \App\Models\User::where('role', 'client')
+            ->whereDoesntHave('client')
+            ->get();
+        return view("clients.create", compact('users'));
     }
 
     /**
@@ -35,6 +38,7 @@ class ClientController extends Controller
             'type' => 'required|in:personne,association',
             'telephone' => 'required|string|max:20',
             'adresse' => 'required|string|max:255',
+            'user_id' => 'nullable|exists:users,id',
         ];
 
         if ($type === 'personne') {
@@ -42,8 +46,7 @@ class ClientController extends Controller
             $rules['prenom'] = 'nullable|string|max:255';
             $rules['date_naissance'] = 'nullable|date';
             $rules['cin'] = 'nullable|string|max:20';
-        }
-        else {
+        } else {
             $rules['raison_sociale'] = 'required|string|max:255';
             $rules['nif'] = 'nullable|string|max:20';
             $rules['stat'] = 'nullable|string|max:20';
@@ -70,7 +73,12 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
-        return view("clients.edit", compact("client"));
+        $users = \App\Models\User::where('role', 'client')
+            ->where(function ($q) use ($client) {
+                $q->whereDoesntHave('client')
+                    ->orWhere('id', $client->user_id);
+            })->get();
+        return view("clients.edit", compact("client", "users"));
     }
 
     /**
@@ -84,6 +92,7 @@ class ClientController extends Controller
             'type' => 'required|in:personne,association',
             'telephone' => 'required|string|max:20',
             'adresse' => 'required|string|max:255',
+            'user_id' => 'nullable|exists:users,id',
         ];
 
         if ($type === 'personne') {
@@ -91,8 +100,7 @@ class ClientController extends Controller
             $rules['prenom'] = 'nullable|string|max:255';
             $rules['date_naissance'] = 'nullable|date';
             $rules['cin'] = 'nullable|string|max:20';
-        }
-        else {
+        } else {
             $rules['raison_sociale'] = 'required|string|max:255';
             $rules['nif'] = 'nullable|string|max:20';
             $rules['stat'] = 'nullable|string|max:20';

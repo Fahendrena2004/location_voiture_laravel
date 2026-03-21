@@ -8,15 +8,13 @@ class Location extends Model
 {
     protected $fillable = [
         'client_id',
-        'voiture_id',
-        'avec_chauffeur',
-        'chauffeur_id',
         'date_debut',
         'date_fin',
-        'date_retour',
         'tarif_total',
-        'penalite',
         'statut',
+        'date_retour',
+        'penalite',
+        'avec_chauffeur',
     ];
 
     public function client()
@@ -24,14 +22,14 @@ class Location extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function voiture()
+    public function voitures()
     {
-        return $this->belongsTo(Voiture::class);
+        return $this->belongsToMany(Voiture::class, 'location_voiture')->withTimestamps();
     }
 
-    public function chauffeur()
+    public function chauffeurs()
     {
-        return $this->belongsTo(Chauffeur::class);
+        return $this->belongsToMany(Chauffeur::class, 'chauffeur_location')->withTimestamps();
     }
 
     public function paiements()

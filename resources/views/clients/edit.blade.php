@@ -8,7 +8,8 @@
             </flux:heading>
         </div>
 
-        <form action="{{ route('clients.update', $client) }}" method="POST" class="space-y-6" x-data="{ type: '{{ old('type', $client->type) }}' }">
+        <form action="{{ route('clients.update', $client) }}" method="POST" class="space-y-6"
+            x-data="{ type: '{{ old('type', $client->type) }}' }">
             @csrf
             @method('PUT')
 
@@ -31,7 +32,8 @@
                 <template x-if="type === 'association'">
                     <flux:field>
                         <flux:label>Raison Sociale</flux:label>
-                        <flux:input name="raison_sociale" :value="old('raison_sociale', $client->raison_sociale)" required />
+                        <flux:input name="raison_sociale" :value="old('raison_sociale', $client->raison_sociale)"
+                            required />
                         @error('raison_sociale') <flux:error>{{ $message }}</flux:error> @enderror
                     </flux:field>
                 </template>
@@ -53,7 +55,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <template x-if="type === 'personne'">
                     <flux:field>
-                        <flux:input type="date" name="date_naissance" label="Date de naissance" :value="old('date_naissance', $client->date_naissance)" />
+                        <flux:input type="date" name="date_naissance" label="Date de naissance"
+                            :value="old('date_naissance', $client->date_naissance)" />
                         @error('date_naissance') <flux:error>{{ $message }}</flux:error> @enderror
                     </flux:field>
                 </template>
@@ -77,7 +80,18 @@
             </flux:field>
 
             <flux:field>
-                <flux:textarea name="adresse" label="Adresse" required>{{ old('adresse', $client->adresse) }}</flux:textarea>
+                <flux:select name="user_id" label="Compte Utilisateur (Optionnel)" placeholder="Choisir un compte...">
+                    <flux:option value="">-- Aucun --</flux:option>
+                    @foreach($users as $user)
+                        <flux:option value="{{ $user->id }}" {{ old('user_id', $client->user_id) == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</flux:option>
+                    @endforeach
+                </flux:select>
+                @error('user_id') <flux:error>{{ $message }}</flux:error> @enderror
+            </flux:field>
+
+            <flux:field>
+                <flux:textarea name="adresse" label="Adresse" required>{{ old('adresse', $client->adresse) }}
+                </flux:textarea>
                 @error('adresse') <flux:error>{{ $message }}</flux:error> @enderror
             </flux:field>
 
@@ -88,4 +102,3 @@
         </form>
     </div>
 </x-layouts::app>
-

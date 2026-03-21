@@ -15,7 +15,10 @@
                     class="w-full bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm">
                     @foreach($locations as $location)
                         <option value="{{ $location->id }}" data-prix="{{ $location->tarif_total }}" {{ old('location_id', $paiement->location_id) == $location->id ? 'selected' : '' }}>
-                            {{ $location->client->nom }} {{ $location->client->prenom }} - {{ $location->voiture->marque }}
+                            @if(auth()->user()->isAdmin())
+                                {{ $location->client->nom }} {{ $location->client->prenom }} -
+                            @endif
+                            {{ Str::limit($location->voitures->pluck('marque')->join(', '), 30) }}
                             ({{ \Carbon\Carbon::parse($location->date_debut)->format('d/m/Y') }}) -
                             {{ number_format($location->tarif_total, 2) }}€
                         </option>

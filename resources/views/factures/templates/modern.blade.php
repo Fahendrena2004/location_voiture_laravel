@@ -96,14 +96,20 @@
             <div>
                 <p
                     class="text-xs font-bold uppercase tracking-wider text-neutral-400 print:text-neutral-500 mb-2 print:mb-1">
-                    Véhicule</p>
-                <p class="text-base print:text-sm font-bold text-neutral-900 dark:text-white print:text-black">
-                    {{ $facture->location->voiture->marque }} {{ $facture->location->voiture->modele }}
-                </p>
-                <p
-                    class="text-xs font-medium text-neutral-500 print:text-black mt-1 px-2 py-0.5 bg-neutral-200 dark:bg-neutral-700 print:bg-transparent print:border print:border-neutral-300 rounded inline-block">
-                    {{ $facture->location->voiture->immatriculation }}
-                </p>
+                    Véhicule(s)</p>
+                <div class="flex flex-col gap-1">
+                    @foreach($facture->location->voitures as $voiture)
+                        <div>
+                            <span class="text-sm print:text-xs font-bold text-neutral-900 dark:text-white print:text-black">
+                                {{ $voiture->marque }} {{ $voiture->modele }}
+                            </span>
+                            <span
+                                class="text-xs font-medium text-neutral-500 print:text-black mt-1 px-1 bg-neutral-200 dark:bg-neutral-700 print:bg-transparent print:border print:border-neutral-300 rounded inline-block">
+                                {{ $voiture->immatriculation }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
             <div>
                 <p
@@ -123,16 +129,20 @@
                 <p
                     class="text-xs font-bold uppercase tracking-wider text-neutral-400 print:text-neutral-500 mb-2 print:mb-1">
                     Chauffeur</p>
-                @if($facture->location->avec_chauffeur)
+                @if($facture->location->chauffeurs->isNotEmpty())
                     <p
-                        class="text-sm print:text-xs font-bold text-neutral-900 dark:text-white print:text-black flex items-center gap-2">
+                        class="text-sm print:text-xs font-bold text-neutral-900 dark:text-white print:text-black flex items-center gap-2 mb-1">
                         <span
                             class="w-2 h-2 rounded-full bg-green-500 print:border print:border-green-600 display-inline-block"></span>
-                        Inclus
+                        Inclus ({{ $facture->location->chauffeurs->count() }})
                     </p>
-                    <p class="text-xs font-medium text-neutral-500 print:text-black mt-1">
-                        {{ $facture->location->chauffeur->nom ?? 'Assigné' }}
-                    </p>
+                    <div class="space-y-1">
+                        @foreach($facture->location->chauffeurs as $chauffeur)
+                            <p class="text-xs font-medium text-neutral-500 print:text-black">
+                                - {{ $chauffeur->nom }} {{ $chauffeur->prenom }}
+                            </p>
+                        @endforeach
+                    </div>
                 @else
                     <p class="text-sm print:text-xs font-medium text-neutral-400 print:text-neutral-500">Non inclus</p>
                 @endif
@@ -159,25 +169,47 @@
                     @php
                         $montantHt = $facture->montant_total - ($facture->location->penalite ?? 0);
                     @endphp
-                    <tr
-                        class="group hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors break-inside-avoid">
-                        <td class="py-6 print:py-2 px-2">
-                            <div
-                                class="font-bold text-neutral-900 dark:text-white print:text-black text-base print:text-sm">
-                                Forfait Location Véhicule</div>
-                            <div class="text-sm print:text-xs font-medium text-neutral-500 print:text-neutral-600 mt-1">
-                                Mise à disposition du véhicule {{ $facture->location->voiture->marque }} avec assurance
-                                incluse.</div>
-                        </td>
-                        <td
-                            class="py-6 print:py-2 px-2 text-right text-sm font-bold text-neutral-600 dark:text-neutral-400 print:text-black">
-                            {{ $jours }} jour(s)
-                        </td>
-                        <td
-                            class="py-6 print:py-2 px-2 text-right font-black text-neutral-900 dark:text-white print:text-black whitespace-nowrap text-lg print:text-base">
-                            {{ \App\Helpers\CurrencyHelper::format($montantHt) }}
-                        </td>
-                    </tr>
+                    @foreach($facture->location->voitures as $voiture)
+                        <tr
+                            class="group hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors break-inside-avoid">
+                            <td class="py-4 print:py-2 px-2">
+                                <div
+                                    class="font-bold text-neutral-900 dark:text-white print:text-black text-sm print:text-xs">
+                                    Location {{ $voiture->marque }} {{ $voiture->modele }}</div>
+                                <div class="text-xs font-medium text-neutral-500 print:text-neutral-600 mt-1">
+                                    Mise à disposition du véhicule avec assurance incluse.</div>
+                            </td>
+                            <td
+                                class="py-4 print:py-2 px-2 text-right text-sm font-bold text-neutral-600 dark:text-neutral-400 print:text-black">
+                                {{ $jours }} jour(s)
+                            </td>
+                            <td
+                                class="py-4 print:py-2 px-2 text-right font-black text-neutral-900 dark:text-white print:text-black whitespace-nowrap text-base print:text-sm">
+                                {{ \App\Helpers\CurrencyHelper::format($voiture->prix_journalier * $jours) }}
+                            </td>
+                        </tr>
+                    @endforeach
+                    @foreach($facture->location->chauffeurs as $chauffeur)
+                        <tr
+                            class="group hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors break-inside-avoid">
+                            <td class="py-4 print:py-2 px-2">
+                                <div
+                                    class="font-bold text-neutral-900 dark:text-white print:text-black text-sm print:text-xs">
+                                    Prestation Chauffeur</div>
+                                <div class="text-xs font-medium text-neutral-500 print:text-neutral-600 mt-1">
+                                    {{ $chauffeur->nom }} {{ $chauffeur->prenom }}
+                                </div>
+                            </td>
+                            <td
+                                class="py-4 print:py-2 px-2 text-right text-sm font-bold text-neutral-600 dark:text-neutral-400 print:text-black">
+                                {{ $jours }} jour(s)
+                            </td>
+                            <td
+                                class="py-4 print:py-2 px-2 text-right font-black text-neutral-900 dark:text-white print:text-black whitespace-nowrap text-base print:text-sm">
+                                {{ \App\Helpers\CurrencyHelper::format(20 * $jours) }}
+                            </td>
+                        </tr>
+                    @endforeach
                     @if(($facture->location->penalite ?? 0) > 0)
                         <tr class="group hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors break-inside-avoid">
                             <td class="py-6 print:py-2 px-2">

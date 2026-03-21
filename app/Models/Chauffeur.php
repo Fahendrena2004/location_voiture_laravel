@@ -14,12 +14,8 @@ class Chauffeur extends Model
         'disponible',
     ];
 
-    protected $casts = [
-        'disponible' => 'boolean',
-    ];
-
     public function locations()
     {
-        return $this->hasMany(Location::class);
+        return $this->belongsToMany(Location::class, 'chauffeur_location')->withTimestamps();
     }
 }

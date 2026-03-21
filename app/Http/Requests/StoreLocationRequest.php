@@ -14,6 +14,19 @@ class StoreLocationRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        if (auth()->user()->isClient()) {
+            $client = auth()->user()->client;
+            if ($client) {
+                $this->merge([
+                    'client_id' => $client->id,
+                    'statut' => 'en attente',
+                ]);
+            }
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -23,14 +36,15 @@ class StoreLocationRequest extends FormRequest
     {
         return [
             'client_id' => 'required|exists:clients,id',
-            'voiture_id' => 'required|exists:voitures,id',
-            'avec_chauffeur' => 'required|boolean',
-            'chauffeur_id' => 'required_if:avec_chauffeur,1|nullable|exists:chauffeurs,id',
+            'voitures' => 'required|array|min:1',
+            'voitures.*' => 'exists:voitures,id',
+            'chauffeurs' => 'nullable|array',
+            'chauffeurs.*' => 'exists:chauffeurs,id',
             'date_debut' => 'required|date',
             'date_fin' => 'required|date|after_or_equal:date_debut',
             'date_retour' => 'nullable|date|after_or_equal:date_debut',
             'tarif_total' => 'required|numeric|min:0',
-            'statut' => 'required|in:en cours,terminée,annulée',
+            'statut' => 'required|in:en attente,en cours,terminée,annulée',
         ];
     }
 }

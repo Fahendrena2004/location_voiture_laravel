@@ -22,6 +22,6 @@ class Voiture extends Model
 
     public function locations()
     {
-        return $this->hasMany(Location::class);
+        return $this->belongsToMany(Location::class, 'location_voiture')->withTimestamps();
     }
 }

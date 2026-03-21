@@ -17,7 +17,7 @@
                     <a href="{{ route('locations.show', $paiement->location) }}" wire:navigate
                         class="text-primary hover:underline">
                         {{ $paiement->location->client->nom }} {{ $paiement->location->client->prenom }} -
-                        {{ $paiement->location->voiture->marque }} {{ $paiement->location->voiture->modele }}
+                        {{ $paiement->location->voitures->map(fn($v) => $v->marque . ' ' . $v->modele)->join(', ') }}
                         ({{ \Carbon\Carbon::parse($paiement->location->date_debut)->format('d/m/Y') }})
                     </a>
                 </div>

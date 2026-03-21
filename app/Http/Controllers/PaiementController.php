@@ -13,7 +13,15 @@ class PaiementController extends Controller
      */
     public function index()
     {
-        $paiements = Paiement::with('location.client')->get();
+        $query = Paiement::with('location.client');
+
+        if (auth()->user()->isClient()) {
+            $query->whereHas('location.client', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+
+        $paiements = $query->get();
         return view('paiements.index', compact('paiements'));
     }
 
@@ -22,7 +30,15 @@ class PaiementController extends Controller
      */
     public function create()
     {
-        $locations = Location::with('client', 'voiture')->get();
+        $query = Location::with('client', 'voitures');
+
+        if (auth()->user()->isClient()) {
+            $query->whereHas('client', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+
+        $locations = $query->get();
         return view('paiements.create', compact('locations'));
     }
 
@@ -32,7 +48,18 @@ class PaiementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'location_id' => 'required|exists:locations,id',
+            'location_id' => [
+                'required',
+                'exists:locations,id',
+                function ($attribute, $value, $fail) {
+                    if (auth()->user()->isClient()) {
+                        $location = Location::find($value);
+                        if (!$location || $location->client->user_id !== auth()->id()) {
+                            $fail('Vous n\'êtes pas autorisé à payer pour cette location.');
+                        }
+                    }
+                },
+            ],
             'date_paiement' => 'required|date',
             'montant' => 'required|numeric|min:0',
             'mode_paiement' => 'required|in:espèces,bancaire,mobile_money',
@@ -51,7 +78,10 @@ class PaiementController extends Controller
      */
     public function show(Paiement $paiement)
     {
-        $paiement->load('location.client', 'location.voiture');
+        if (auth()->user()->isClient() && $paiement->location->client->user_id !== auth()->id()) {
+            abort(403);
+        }
+        $paiement->load('location.client', 'location.voitures');
         return view('paiements.show', compact('paiement'));
     }
 
@@ -60,7 +90,18 @@ class PaiementController extends Controller
      */
     public function edit(Paiement $paiement)
     {
-        $locations = Location::with('client', 'voiture')->get();
+        if (auth()->user()->isClient() && $paiement->location->client->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $query = Location::with('client', 'voitures');
+        if (auth()->user()->isClient()) {
+            $query->whereHas('client', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+        $locations = $query->get();
+
         return view('paiements.edit', compact('paiement', 'locations'));
     }
 
@@ -70,7 +111,18 @@ class PaiementController extends Controller
     public function update(Request $request, Paiement $paiement)
     {
         $validated = $request->validate([
-            'location_id' => 'required|exists:locations,id',
+            'location_id' => [
+                'required',
+                'exists:locations,id',
+                function ($attribute, $value, $fail) {
+                    if (auth()->user()->isClient()) {
+                        $location = Location::find($value);
+                        if (!$location || $location->client->user_id !== auth()->id()) {
+                            $fail('Vous n\'êtes pas autorisé à payer pour cette location.');
+                        }
+                    }
+                },
+            ],
             'date_paiement' => 'required|date',
             'montant' => 'required|numeric|min:0',
             'mode_paiement' => 'required|in:espèces,bancaire,mobile_money',
@@ -89,6 +141,10 @@ class PaiementController extends Controller
      */
     public function destroy(Paiement $paiement)
     {
+        if (auth()->user()->isClient()) {
+            abort(403);
+        }
+
         $paiement->delete();
 
         return redirect()->route('paiements.index')->with('success', 'Paiement supprimé avec succès.');

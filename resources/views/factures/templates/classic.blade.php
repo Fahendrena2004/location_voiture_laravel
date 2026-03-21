@@ -28,8 +28,7 @@
         </div>
         <div>
             <flux:label class="text-xs uppercase text-neutral-500 mb-1">Information Location :</flux:label>
-            <flux:text size="sm"><span class="font-medium">Véhicule :</span> {{ $facture->location->voiture->marque }}
-                {{ $facture->location->voiture->modele }} ({{ $facture->location->voiture->immatriculation }})
+            <flux:text size="sm"><span class="font-medium">Véhicule(s) :</span> {{ Str::limit($facture->location->voitures->pluck('marque')->join(', '), 40) }}
             </flux:text>
             <flux:text size="sm"><span class="font-medium">Période :</span> du
                 {{ \Carbon\Carbon::parse($facture->location->date_debut)->format('d/m/Y') }} au
@@ -47,17 +46,31 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-neutral-100 dark:divide-neutral-700">
+            @php $jours = \Carbon\Carbon::parse($facture->location->date_debut)->diffInDays(\Carbon\Carbon::parse($facture->location->date_fin)) ?: 1; @endphp
+            @foreach($facture->location->voitures as $voiture)
             <tr>
                 <td class="py-4">
                     <div class="font-medium">Location de véhicule</div>
-                    <div class="text-xs text-neutral-500">{{ $facture->location->voiture->marque }}
-                        {{ $facture->location->voiture->modele }}
+                    <div class="text-xs text-neutral-500">{{ $voiture->marque }}
+                        {{ $voiture->modele }}
                     </div>
                 </td>
                 <td class="py-4 text-right font-medium">
-                    {{ \App\Helpers\CurrencyHelper::format($facture->montant_total - ($facture->location->penalite ?? 0)) }}
+                    {{ \App\Helpers\CurrencyHelper::format($voiture->prix_journalier * $jours) }}
                 </td>
             </tr>
+            @endforeach
+            @foreach($facture->location->chauffeurs as $chauffeur)
+            <tr>
+                <td class="py-4">
+                    <div class="font-medium">Prestation Chauffeur</div>
+                    <div class="text-xs text-neutral-500">{{ $chauffeur->nom }} {{ $chauffeur->prenom }}</div>
+                </td>
+                <td class="py-4 text-right font-medium">
+                    {{ \App\Helpers\CurrencyHelper::format(20 * $jours) }}
+                </td>
+            </tr>
+            @endforeach
             @if(($facture->location->penalite ?? 0) > 0)
                 <tr>
                     <td class="py-4">
