@@ -8,6 +8,23 @@
         <form action="{{ route('locations.store') }}" method="POST" class="space-y-6" id="location-form" x-data="{ 
                 statut: '{{ auth()->user()->isClient() ? 'en attente' : old('statut', 'en cours') }}',
                 avec_chauffeur: {{ old('avec_chauffeur') ? 'true' : 'false' }},
+                selectedVoitureId: '{{ $selectedVoitureId ?? '' }}',
+                availableVoitures: @js($voitures),
+                async checkAvailability() {
+                    const dateDebutInput = document.querySelector('input[name=\'date_debut\']');
+                    const dateFinInput = document.querySelector('input[name=\'date_fin\']');
+                    if (dateDebutInput && dateFinInput && dateDebutInput.value && dateFinInput.value && dateFinInput.value >= dateDebutInput.value) {
+                        try {
+                            const response = await fetch(`/locations/available-cars?date_debut=${dateDebutInput.value}&date_fin=${dateFinInput.value}`);
+                            if (response.ok) {
+                                this.availableVoitures = await response.json();
+                                // Ensure selected car is still there or re-add it if needed (context)
+                            }
+                        } catch (error) {
+                            console.error('Erreur lors de la récupération des véhicules', error);
+                        }
+                    }
+                },
                 updateTotal() {
                     const voituresSelect = document.querySelector('select[name=\'voitures[]\']');
                     const chauffeursSelect = document.querySelector('select[name=\'chauffeurs[]\']');
@@ -46,7 +63,7 @@
                     }
                 }
             }"
-            x-init="$watch('statut', value => { if(value === 'terminée') { let dr = document.getElementById('date_retour_input'); if(dr && !dr.value) dr.value = new Date().toISOString().split('T')[0]; } updateTotal(); }); $watch('avec_chauffeur', () => updateTotal()); setTimeout(() => updateTotal(), 500)">
+            x-init="$watch('statut', value => { if(value === 'terminée') { let dr = document.getElementById('date_retour_input'); if(dr && !dr.value) dr.value = new Date().toISOString().split('T')[0]; } updateTotal(); }); $watch('avec_chauffeur', () => updateTotal()); setTimeout(() => updateTotal(), 500);">
             @csrf
 
             <div class="grid grid-cols-1 gap-6">
@@ -57,26 +74,33 @@
                         <flux:input value="{{ $clients->first()->nom }} {{ $clients->first()->prenom }}" readonly />
                     </flux:field>
                 @else
-                    <flux:select name="client_id" label="Sélectionner le Client" placeholder="Rechercher un client..."
-                        searchable required>
-                        @foreach($clients as $client)
-                            <flux:select.option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                                {{ $client->nom }} {{ $client->prenom }}
-                            </flux:select.option>
-                        @endforeach
-                    </flux:select>
+                    <flux:field>
+                        <flux:label>Sélectionner le Client</flux:label>
+                        <select name="client_id" required
+                            class="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm">
+                            <option value="" disabled selected>Rechercher un client...</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
+                                    {{ $client->nom }} {{ $client->prenom }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </flux:field>
                 @endif
 
                 <flux:field>
                     <flux:label>Sélectionner les Véhicules</flux:label>
+                    <div x-show="availableVoitures.length === 0" class="text-sm text-red-500 mb-2">Aucun véhicule
+                        disponible pour ces dates.</div>
                     <select name="voitures[]" multiple required @change="updateTotal()"
+                        x-show="availableVoitures.length > 0"
                         class="w-full bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm h-40 focus:ring-2 focus:ring-primary shadow-sm">
-                        @foreach($voitures as $voiture)
-                            <option value="{{ $voiture->id }}" data-prix="{{ $voiture->prix_journalier }}" {{ (is_array(old('voitures')) && in_array($voiture->id, old('voitures'))) ? 'selected' : '' }}>
-                                {{ $voiture->marque }} {{ $voiture->modele }} ({{ $voiture->immatriculation }}) —
-                                {{ number_format($voiture->prix_journalier, 2) }} € / jour
+                        <template x-for="voiture in availableVoitures" :key="voiture.id">
+                            <option :value="voiture.id" :data-prix="voiture.prix_journalier"
+                                :selected="voiture.id == selectedVoitureId"
+                                x-text="`${voiture.marque} ${voiture.modele} (${voiture.immatriculation}) — ${Number(voiture.prix_journalier).toFixed(2)} € / jour`">
                             </option>
-                        @endforeach
+                        </template>
                     </select>
                     <p class="mt-1 text-xs text-neutral-500">Maintenez Ctrl (Win) ou Cmd (Mac) pour sélectionner
                         plusieurs véhicules.</p>
@@ -105,11 +129,12 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <flux:input type="date" name="date_debut" @change="updateTotal()" label="Date de début"
-                    value="{{ old('date_debut', date('Y-m-d')) }}" required />
+                <flux:input type="date" name="date_debut" @change="checkAvailability().then(() => updateTotal())"
+                    label="Date de début" value="{{ old('date_debut', date('Y-m-d')) }}" required />
                 <div>
-                    <flux:input type="date" name="date_fin" @change="updateTotal()" label="Date de fin"
-                        value="{{ old('date_fin', date('Y-m-d', strtotime('+1 day'))) }}" required />
+                    <flux:input type="date" name="date_fin" @change="checkAvailability().then(() => updateTotal())"
+                        label="Date de fin" value="{{ old('date_fin', date('Y-m-d', strtotime('+1 day'))) }}"
+                        required />
                     <p class="mt-1 text-xs text-neutral-500 italic">* Un retard de retour entraîne une pénalité de 10 €
                         / jour.</p>
                 </div>

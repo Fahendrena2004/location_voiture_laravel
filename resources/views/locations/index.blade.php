@@ -2,8 +2,12 @@
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between">
             <flux:heading size="xl">Locations</flux:heading>
-            @if(auth()->user()->isClient())
-                <flux:button href="{{ route('locations.create') }}" wire:navigate icon="plus" variant="primary">Nouvelle Location</flux:button>
+            @if(auth()->user()->isAdmin())
+                <flux:button href="{{ route('locations.create') }}" wire:navigate icon="plus" variant="primary">Nouvelle
+                    Location</flux:button>
+            @else
+                <flux:button href="{{ route('voitures.index') }}" wire:navigate icon="plus" variant="primary">Réserver une
+                    voiture</flux:button>
             @endif
         </div>
 
@@ -24,7 +28,7 @@
                     <flux:table.column>Fin</flux:table.column>
                     <flux:table.column>Tarif Total</flux:table.column>
                     <flux:table.column>Chauffeur</flux:table.column>
-                    <flux:table.column>Statut</flux:table.column>
+                    <flux:table.column>Statut & Progression</flux:table.column>
                     <flux:table.column>Actions</flux:table.column>
                 </flux:table.columns>
 
@@ -75,29 +79,76 @@
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                <div class="flex justify-start">
-                                    <flux:badge
-                                        variant="{{ $location->statut === 'en cours' ? 'warning' : ($location->statut === 'terminée' ? 'success' : 'danger') }}"
-                                        inset="left">
-                                        {{ ucfirst($location->statut) }}
-                                    </flux:badge>
+                                <div class="flex flex-col gap-2 min-w-[150px]">
+                                    <div class="flex justify-start">
+                                        <flux:badge
+                                            variant="{{ $location->statut === 'en cours' ? 'warning' : ($location->statut === 'terminée' ? 'success' : 'danger') }}"
+                                            inset="left">
+                                            {{ ucfirst($location->statut) }}
+                                        </flux:badge>
+                                    </div>
+
+                                    @if($location->statut === 'en cours' || $location->statut === 'terminée')
+                                        @php
+                                            $start = \Carbon\Carbon::parse($location->date_debut);
+                                            $end = \Carbon\Carbon::parse($location->date_fin);
+                                            $now = now();
+                                            $total = $start->diffInDays($end) ?: 1;
+                                            $elapsed = $start->diffInDays($now);
+                                            $percent = $location->statut === 'terminée' ? 100 : min(100, max(0, ($elapsed / $total) * 100));
+                                        @endphp
+                                        <div class="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                            <div class="h-full {{ $percent >= 100 ? 'bg-green-500' : 'bg-yolk-500' }} transition-all duration-500"
+                                                style="width: {{ $percent }}%"></div>
+                                        </div>
+                                        <p class="text-[10px] text-zinc-500 font-medium">{{ round($percent) }}% complété</p>
+                                    @endif
                                 </div>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <div class="flex gap-2">
-                                    <flux:button href="{{ route('locations.show', $location) }}" wire:navigate icon="eye"
-                                        size="sm" variant="ghost"
-                                        class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300" />
-                                    <flux:button href="{{ route('locations.edit', $location) }}" wire:navigate icon="pencil"
-                                        size="sm" variant="ghost"
-                                        class="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300" />
-                                    <form action="{{ route('locations.destroy', $location) }}" method="POST"
-                                        onsubmit="return confirm('Êtes-vous sûr ?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <flux:button type="submit" icon="trash" size="sm" variant="ghost"
-                                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />
-                                    </form>
+                                <div class="flex items-center gap-2">
+                                    <flux:dropdown>
+                                        <flux:button variant="outline" size="sm" icon="ellipsis-vertical"
+                                            class="rounded-full" />
+
+                                        <flux:menu>
+                                            <flux:menu.item href="{{ route('locations.show', $location) }}" wire:navigate
+                                                icon="eye">Voir</flux:menu.item>
+
+                                            @if(auth()->user()->isAdmin())
+                                                <flux:menu.item href="{{ route('locations.edit', $location) }}" wire:navigate
+                                                    icon="pencil">Modifier</flux:menu.item>
+
+                                                <flux:menu.separator />
+
+                                                <form action="{{ route('locations.destroy', $location) }}" method="POST"
+                                                    onsubmit="return confirm('Êtes-vous sûr ?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <flux:menu.item type="submit" as="button" icon="trash" variant="danger">
+                                                        Supprimer</flux:menu.item>
+                                                </form>
+                                            @endif
+                                        </flux:menu>
+                                    </flux:dropdown>
+
+                                    @if(auth()->user()->isAdmin() && $location->statut === 'en attente')
+                                        <div class="flex gap-1">
+                                            <form action="{{ route('locations.approve', $location) }}" method="POST">
+                                                @csrf
+                                                <flux:button type="submit" size="sm" variant="filled"
+                                                    class="bg-green-500 hover:bg-green-600 text-white border-0" icon="check"
+                                                    title="Valider la réservation" />
+                                            </form>
+                                            <form action="{{ route('locations.reject', $location) }}" method="POST"
+                                                onsubmit="return confirm('Refuser cette réservation ?')">
+                                                @csrf
+                                                <flux:button type="submit" size="sm" variant="filled"
+                                                    class="bg-red-500 hover:bg-red-600 text-white border-0" icon="x-mark"
+                                                    title="Refuser" />
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                             </flux:table.cell>
                         </flux:table.row>

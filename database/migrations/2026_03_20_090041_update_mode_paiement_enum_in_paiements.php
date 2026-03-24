@@ -9,8 +9,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE paiements DROP CONSTRAINT paiements_mode_paiement_check;');
-        DB::statement("ALTER TABLE paiements ADD CONSTRAINT paiements_mode_paiement_check CHECK (mode_paiement::text = ANY (ARRAY['espèces'::character varying, 'carte'::character varying, 'virement'::character varying, 'bancaire'::character varying, 'mobile_money'::character varying]::text[]));");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE paiements DROP CONSTRAINT paiements_mode_paiement_check;');
+            DB::statement("ALTER TABLE paiements ADD CONSTRAINT paiements_mode_paiement_check CHECK (mode_paiement::text = ANY (ARRAY['espèces'::character varying, 'carte'::character varying, 'virement'::character varying, 'bancaire'::character varying, 'mobile_money'::character varying]::text[]));");
+        }
     }
 
     /**
@@ -18,7 +20,9 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE paiements DROP CONSTRAINT paiements_mode_paiement_check;');
-        DB::statement("ALTER TABLE paiements ADD CONSTRAINT paiements_mode_paiement_check CHECK (mode_paiement::text = ANY (ARRAY['espèces'::character varying, 'carte'::character varying, 'virement'::character varying]::text[]));");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE paiements DROP CONSTRAINT paiements_mode_paiement_check;');
+            DB::statement("ALTER TABLE paiements ADD CONSTRAINT paiements_mode_paiement_check CHECK (mode_paiement::text = ANY (ARRAY['espèces'::character varying, 'carte'::character varying, 'virement'::character varying]::text[]));");
+        }
     }
 };

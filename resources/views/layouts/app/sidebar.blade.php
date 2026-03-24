@@ -42,12 +42,85 @@
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
+            <div class="px-2 mb-4" x-data="{
+                query: '',
+                results: [],
+                loading: false,
+                async search() {
+                    if (this.query.length < 2) {
+                        this.results = [];
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/search?q=${encodeURIComponent(this.query)}`);
+                        this.results = await response.json();
+                    } catch (e) {
+                        console.error('Search failed', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }">
+                <div class="relative">
+                    <flux:input type="search" placeholder="Recherche globale..." icon="magnifying-glass" x-model="query"
+                        @input.debounce.300ms="search" @focus="if(query.length >= 2) search()"
+                        class="bg-white/50 dark:bg-zinc-800/50" />
+
+                    <div x-show="(results.length > 0 || loading) && query.length >= 2"
+                        class="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 rounded-xl shadow-xl border border-yolk-200 dark:border-zinc-700 overflow-hidden"
+                        x-cloak x-on:click.away="results = []; loading = false">
+                        <div class="p-2 max-h-96 overflow-y-auto">
+                            <!-- Loading State -->
+                            <div x-show="loading" class="flex items-center justify-center p-4">
+                                <flux:icon.loading class="size-6 text-yolk-600" />
+                            </div>
+
+                            <!-- Results List -->
+                            <template x-show="!loading" x-for="result in results" x-bind:key="result.url">
+                                <a x-bind:href="result.url"
+                                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-yolk-100 dark:hover:bg-zinc-700 transition-colors group"
+                                    wire:navigate>
+                                    <div
+                                        class="p-2 rounded-full bg-yolk-50 dark:bg-zinc-900 text-yolk-600 dark:text-yolk-400">
+                                        <template x-if="result.type === 'Client'">
+                                            <flux:icon name="users" class="size-4" />
+                                        </template>
+                                        <template x-if="result.type === 'Voiture'">
+                                            <flux:icon name="truck" class="size-4" />
+                                        </template>
+                                        <template x-if="result.type === 'Location'">
+                                            <flux:icon name="calendar" class="size-4" />
+                                        </template>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-bold truncate dark:text-white" x-text="result.title"></p>
+                                        <p class="text-xs text-zinc-500 truncate"
+                                            x-text="result.type + ' • ' + result.subtitle"></p>
+                                    </div>
+                                </a>
+                            </template>
+
+                            <!-- Empty State -->
+                            <div x-show="!loading && results.length === 0" class="p-4 text-center">
+                                <p class="text-sm text-zinc-500 italic">Aucun résultat trouvé pour "<span
+                                        x-text="query"></span>"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <flux:sidebar.group :heading="__('Menu Principal')" class="grid">
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
                     wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
                 @if(auth()->user()->isAdmin())
+                    <flux:sidebar.item icon="shield-check" :href="route('users.index')"
+                        :current="request()->routeIs('users.*')" wire:navigate>
+                        {{ __('Utilisateurs') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="users" :href="route('clients.index')"
                         :current="request()->routeIs('clients.*')" wire:navigate>
                         {{ __('Clients') }}
@@ -59,6 +132,10 @@
                     <flux:sidebar.item icon="wrench" :href="route('entretiens.index')"
                         :current="request()->routeIs('entretiens.*')" wire:navigate>
                         {{ __('Entretiens') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="banknotes" :href="route('comptes.index')"
+                        :current="request()->routeIs('comptes.*')" wire:navigate>
+                        {{ __('Comptes Admin') }}
                     </flux:sidebar.item>
                 @endif
                 <flux:sidebar.item icon="truck" :href="route('voitures.index')"

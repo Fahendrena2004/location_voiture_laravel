@@ -18,10 +18,21 @@ class StoreLocationRequest extends FormRequest
     {
         if (auth()->user()->isClient()) {
             $client = auth()->user()->client;
+            if (!$client) {
+                $client = \App\Models\Client::create([
+                    'user_id' => auth()->id(),
+                    'type' => 'personne',
+                    'nom' => auth()->user()->name,
+                    'prenom' => '',
+                    'telephone' => '',
+                    'adresse' => '',
+                ]);
+            }
+
             if ($client) {
                 $this->merge([
                     'client_id' => $client->id,
-                    'statut' => 'en attente',
+                    'statut' => $this->statut ?? 'en attente',
                 ]);
             }
         }

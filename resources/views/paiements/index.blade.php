@@ -49,21 +49,27 @@
                                 </div>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <div class="flex gap-2">
-                                    <flux:button href="{{ route('paiements.show', $paiement) }}" wire:navigate icon="eye"
-                                        size="sm" variant="ghost"
-                                        class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300" />
-                                    <flux:button href="{{ route('paiements.edit', $paiement) }}" wire:navigate icon="pencil"
-                                        size="sm" variant="ghost"
-                                        class="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300" />
-                                    <form action="{{ route('paiements.destroy', $paiement) }}" method="POST"
-                                        onsubmit="return confirm('Êtes-vous sûr ?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <flux:button type="submit" icon="trash" size="sm" variant="ghost"
-                                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />
-                                    </form>
-                                </div>
+                                <flux:dropdown>
+                                    <flux:button variant="outline" size="sm" icon="ellipsis-vertical"
+                                        class="rounded-full" />
+
+                                    <flux:menu>
+                                        <flux:menu.item href="{{ route('paiements.show', $paiement) }}" wire:navigate
+                                            icon="eye">Voir</flux:menu.item>
+                                        <flux:menu.item href="{{ route('paiements.edit', $paiement) }}" wire:navigate
+                                            icon="pencil">Modifier</flux:menu.item>
+
+                                        <flux:menu.separator />
+
+                                        <form action="{{ route('paiements.destroy', $paiement) }}" method="POST"
+                                            onsubmit="return confirm('Êtes-vous sûr ?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <flux:menu.item type="submit" as="button" icon="trash" variant="danger">
+                                                Supprimer</flux:menu.item>
+                                        </form>
+                                    </flux:menu>
+                                </flux:dropdown>
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach

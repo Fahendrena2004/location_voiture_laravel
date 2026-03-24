@@ -34,8 +34,10 @@ class VoitureController extends Controller
             'modele' => 'required|string|max:255',
             'immatriculation' => 'required|string|max:255|unique:voitures',
             'couleur' => 'nullable|string|max:255',
+            'nombre_places' => 'required|integer|min:1',
             'prix_journalier' => 'required|numeric|min:0',
             'statut' => 'required|in:disponible,louée,en entretien',
+            'categorie' => 'required|string|in:Berline,SUV,Citadine,Luxe,Utilitaire',
         ]);
 
         Voiture::create($validated);
@@ -69,8 +71,10 @@ class VoitureController extends Controller
             'modele' => 'required|string|max:255',
             'immatriculation' => 'required|string|max:255|unique:voitures,immatriculation,' . $voiture->id,
             'couleur' => 'nullable|string|max:255',
+            'nombre_places' => 'required|integer|min:1',
             'prix_journalier' => 'required|numeric|min:0',
             'statut' => 'required|in:disponible,louée,en entretien',
+            'categorie' => 'required|string|in:Berline,SUV,Citadine,Luxe,Utilitaire',
         ]);
 
         $voiture->update($validated);

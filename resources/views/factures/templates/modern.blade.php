@@ -82,10 +82,10 @@
                 class="text-sm print:text-xs text-neutral-600 dark:text-neutral-400 print:text-black mt-2 print:mt-1 space-y-1 print:space-y-0 font-medium">
                 <p>{{ $facture->location->client->adresse ?? 'Adresse non renseignée' }}</p>
                 <p>Tél : <span
-                        class="text-neutral-900 dark:text-neutral-200 print:text-black">{{ $facture->location->client->telephone }}</span>
+                        class="text-neutral-900 dark:text-neutral-200 print:text-black">{{ $facture->location->client->telephone ?? 'Non renseigné' }}</span>
                 </p>
                 <p>Email : <span
-                        class="text-neutral-900 dark:text-neutral-200 print:text-black">{{ $facture->location->client->email }}</span>
+                        class="text-neutral-900 dark:text-neutral-200 print:text-black">{{ $facture->location->client->user->email ?? 'Non renseigné' }}</span>
                 </p>
             </div>
         </div>
@@ -234,28 +234,31 @@
         <!-- Section Totale & Paiement -->
         <div
             class="flex flex-col md:flex-row print:flex-row justify-between items-end gap-10 print:gap-4 print:items-start break-inside-avoid">
-            <!-- Modalités -->
-            <div
-                class="w-full md:w-1/2 print:w-1/2 p-6 print:p-0 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 print:border-none bg-transparent">
-                <p
-                    class="text-xs font-black uppercase tracking-wider text-neutral-900 dark:text-white print:text-black mb-4 print:mb-2">
-                    Modalités de Paiement</p>
+            @if($facture->statut === 'en attente')
+                <!-- Modalités -->
                 <div
-                    class="text-sm print:text-xs font-medium text-neutral-600 dark:text-neutral-400 print:text-black space-y-3 print:space-y-1">
-                    <div class="flex items-center gap-3 print:gap-2">
-                        <span
-                            class="w-8 h-8 print:w-6 print:h-6 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 flex items-center justify-center font-bold text-xs print:bg-transparent print:border print:border-black print:text-black">BNI</span>
-                        <p>IBAN : <strong class="text-neutral-900 dark:text-white print:text-black">MG00 0000 0000 0000
-                                0000 00</strong></p>
-                    </div>
-                    <div class="flex items-center gap-3 print:gap-2">
-                        <span
-                            class="w-8 h-8 print:w-6 print:h-6 rounded-lg bg-green-100 dark:bg-green-900 text-green-600 flex items-center justify-center font-bold text-xs print:bg-transparent print:border print:border-black print:text-black">MV</span>
-                        <p>MVola : <strong class="text-neutral-900 dark:text-white print:text-black">034 00 000
-                                00</strong></p>
+                    class="w-full md:w-1/2 print:w-1/2 p-6 print:p-0 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 print:border-none bg-transparent">
+                    <p
+                        class="text-xs font-black uppercase tracking-wider text-neutral-900 dark:text-white print:text-black mb-4 print:mb-2">
+                        Modalités de Paiement</p>
+                    <div
+                        class="text-sm print:text-xs font-medium text-neutral-600 dark:text-neutral-400 print:text-black space-y-3 print:space-y-1">
+                        @forelse($comptesPaiement as $compte)
+                            <div class="flex items-center gap-3 print:gap-2">
+                                <span
+                                    class="w-8 h-8 print:w-6 print:h-6 rounded-lg {{ $compte->type === 'bancaire' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600' : 'bg-green-100 dark:bg-green-900 text-green-600' }} flex items-center justify-center font-bold text-xs print:bg-transparent print:border print:border-black print:text-black">
+                                    {{ substr(strtoupper($compte->nom), 0, 2) }}
+                                </span>
+                                <p>{{ $compte->nom }} : <strong
+                                        class="text-neutral-900 dark:text-white print:text-black">{{ $compte->details }}</strong>
+                                </p>
+                            </div>
+                        @empty
+                            <p class="italic text-neutral-500">Espèces uniquement / Non configuré</p>
+                        @endforelse
                     </div>
                 </div>
-            </div>
+            @endif
 
             <!-- Bloc Total Premium -->
             <div class="w-full md:w-1/2 print:w-1/2 max-w-sm ml-auto">

@@ -13,6 +13,17 @@ class PaiementController extends Controller
      */
     public function index()
     {
+        if (auth()->user()->isClient() && !auth()->user()->client) {
+            \App\Models\Client::create([
+                'user_id' => auth()->id(),
+                'type' => 'personne',
+                'nom' => auth()->user()->name,
+                'prenom' => '',
+                'telephone' => '',
+                'adresse' => '',
+            ]);
+        }
+
         $query = Paiement::with('location.client');
 
         if (auth()->user()->isClient()) {
@@ -30,6 +41,17 @@ class PaiementController extends Controller
      */
     public function create()
     {
+        if (auth()->user()->isClient() && !auth()->user()->client) {
+            \App\Models\Client::create([
+                'user_id' => auth()->id(),
+                'type' => 'personne',
+                'nom' => auth()->user()->name,
+                'prenom' => '',
+                'telephone' => '',
+                'adresse' => '',
+            ]);
+        }
+
         $query = Location::with('client', 'voitures');
 
         if (auth()->user()->isClient()) {

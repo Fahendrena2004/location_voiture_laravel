@@ -11,8 +11,11 @@ class Voiture extends Model
         'modele',
         'immatriculation',
         'couleur',
+        'nombre_places',
         'prix_journalier',
         'statut',
+        'date_prochain_entretien',
+        'categorie',
     ];
 
     public function entretiens()

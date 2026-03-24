@@ -16,6 +16,17 @@ class LocationController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->isClient() && !auth()->user()->client) {
+            Client::create([
+                'user_id' => auth()->id(),
+                'type' => 'personne',
+                'nom' => auth()->user()->name,
+                'prenom' => '',
+                'telephone' => '',
+                'adresse' => '',
+            ]);
+        }
+
         $query = Location::with(['client', 'voitures', 'chauffeurs']);
 
         if (auth()->user()->isClient()) {
@@ -28,28 +39,43 @@ class LocationController extends Controller
         return view('locations.index', compact('locations'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        if (!auth()->user()->isClient()) {
-            abort(403, 'Seuls les clients peuvent effectuer une réservation.');
+        if (auth()->user()->isClient()) {
+            $client = auth()->user()->client;
+            if (!$client) {
+                $client = Client::create([
+                    'user_id' => auth()->id(),
+                    'type' => 'personne',
+                    'nom' => auth()->user()->name,
+                    'prenom' => '',
+                    'telephone' => '',
+                    'adresse' => '',
+                ]);
+            }
+            $clients = collect([$client]);
+        } else {
+            // Admin can choose any client
+            $clients = Client::all();
         }
 
-        $client = auth()->user()->client;
-        if (!$client) {
-            return redirect()->route('dashboard')->with('error', 'Vous devez avoir un profil client lié pour réserver.');
-        }
-        $clients = collect([$client]);
-
+        $selectedVoitureId = $request->query('voiture_id');
         $voitures = Voiture::where('statut', 'disponible')->get();
+        if ($selectedVoitureId && !$voitures->contains('id', $selectedVoitureId)) {
+            // If the selected car is not available, we can still load it to show context or just ignore it
+            $selectedVoiture = Voiture::find($selectedVoitureId);
+            if ($selectedVoiture) {
+                $voitures->push($selectedVoiture);
+            }
+        }
+
         $chauffeurs = Chauffeur::where('disponible', true)->get();
-        return view('locations.create', compact('clients', 'voitures', 'chauffeurs'));
+        return view('locations.create', compact('clients', 'voitures', 'chauffeurs', 'selectedVoitureId'));
     }
 
     public function store(StoreLocationRequest $request)
     {
-        if (!auth()->user()->isClient()) {
-            abort(403, 'Seuls les clients peuvent effectuer une réservation.');
-        }
+        // Permission check is now handled via Gate or Middleware if needed
 
         $validated = $request->validated();
 
@@ -222,5 +248,64 @@ class LocationController extends Controller
         }
 
         return redirect()->route('locations.index')->with('success', 'Location supprimée avec succès.');
+    }
+
+    public function getAvailableCars(Request $request)
+    {
+        $request->validate([
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date|after_or_equal:date_debut',
+        ]);
+
+        $dateDebut = Carbon::parse($request->date_debut)->startOfDay();
+        $dateFin = Carbon::parse($request->date_fin)->endOfDay();
+
+        // Trouver les voitures qui ne sont pas liées à une location active pendant cette période
+        $voitures = Voiture::whereDoesntHave('locations', function ($query) use ($dateDebut, $dateFin) {
+            $query->whereNotIn('statut', ['annulée', 'terminée'])
+                ->where(function ($q) use ($dateDebut, $dateFin) {
+                    $q->whereBetween('date_debut', [$dateDebut, $dateFin])
+                        ->orWhereBetween('date_fin', [$dateDebut, $dateFin])
+                        ->orWhere(function ($q2) use ($dateDebut, $dateFin) {
+                            $q2->where('date_debut', '<=', $dateDebut)
+                                ->where('date_fin', '>=', $dateFin);
+                        });
+                });
+        })->get();
+
+        return response()->json($voitures);
+    }
+
+    public function approve(Location $location)
+    {
+        if ($location->statut !== 'en attente') {
+            return back()->with('error', 'Cette location ne peut pas être approuvée.');
+        }
+
+        DB::transaction(function () use ($location) {
+            $location->update(['statut' => 'en cours']);
+
+            // Mettre à jour le statut des voitures et chauffeurs
+            foreach ($location->voitures as $voiture) {
+                $voiture->update(['statut' => 'louée']);
+            }
+
+            foreach ($location->chauffeurs as $chauffeur) {
+                $chauffeur->update(['disponible' => false]);
+            }
+        });
+
+        return back()->with('success', 'Location approuvée avec succès ! Elle est désormais en cours.');
+    }
+
+    public function reject(Location $location)
+    {
+        if ($location->statut !== 'en attente') {
+            return back()->with('error', 'Cette location ne peut pas être rejetée.');
+        }
+
+        $location->update(['statut' => 'annulée']);
+
+        return back()->with('success', 'Location rejetée et annulée.');
     }
 }

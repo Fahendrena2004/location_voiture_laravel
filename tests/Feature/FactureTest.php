@@ -36,13 +36,13 @@ class FactureTest extends TestCase
 
         $location = Location::create([
             'client_id' => $client->id,
-            'voiture_id' => $voiture->id,
             'date_debut' => now()->format('Y-m-d'),
             'date_fin' => now()->addDays(2)->format('Y-m-d'),
             'tarif_total' => 100,
             'statut' => 'en cours',
             'avec_chauffeur' => false
         ]);
+        $location->voitures()->attach($voiture->id);
 
         $response = $this->actingAs($user)->post(route('factures.store'), [
             'location_id' => $location->id,

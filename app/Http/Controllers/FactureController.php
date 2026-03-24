@@ -14,6 +14,17 @@ class FactureController extends Controller
      */
     public function index()
     {
+        if (auth()->user()->isClient() && !auth()->user()->client) {
+            \App\Models\Client::create([
+                'user_id' => auth()->id(),
+                'type' => 'personne',
+                'nom' => auth()->user()->name,
+                'prenom' => '',
+                'telephone' => '',
+                'adresse' => '',
+            ]);
+        }
+
         $query = Facture::with('location.client', 'location.voitures', 'location.chauffeurs');
 
         if (auth()->user()->isClient()) {
@@ -29,11 +40,16 @@ class FactureController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        // Get locations that don't have a facture yet
-        $locations = Location::doesntHave('facture')->with('client', 'voitures', 'chauffeurs')->get();
-        return view('factures.create', compact('locations'));
+        $selectedLocationId = $request->query('location_id');
+        // Get locations that don't have a facture yet, OR the one explicitly requested
+        $locations = Location::whereDoesntHave('facture')
+            ->orWhere('id', $selectedLocationId)
+            ->with('client', 'voitures', 'chauffeurs')
+            ->get();
+
+        return view('factures.create', compact('locations', 'selectedLocationId'));
     }
 
     /**
@@ -53,7 +69,7 @@ class FactureController extends Controller
             // Generate unique invoice number (e.g., FACT-2026-001)
             $year = date('Y', strtotime($validated['date_facture']));
             $lastFacture = Facture::whereYear('date_facture', $year)
-                ->orderBy('numero_facture', 'desc')
+                ->orderBy('id', 'desc')
                 ->first();
 
             $nextSeq = 1;
@@ -89,7 +105,8 @@ class FactureController extends Controller
             abort(403);
         }
         $facture->load('location.client', 'location.voitures', 'location.chauffeurs', 'location.paiements');
-        return view('factures.show', compact('facture'));
+        $comptesPaiement = \App\Models\ComptePaiement::where('actif', true)->get();
+        return view('factures.show', compact('facture', 'comptesPaiement'));
     }
 
     /**
@@ -127,5 +144,22 @@ class FactureController extends Controller
         $facture->delete();
 
         return redirect()->route('factures.index')->with('success', 'Facture supprimée avec succès.');
+    }
+
+    /**
+     * Download the specified resource as PDF.
+     */
+    public function downloadPdf(Facture $facture)
+    {
+        if (auth()->user()->isClient() && $facture->location->client->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $facture->load('location.client', 'location.voitures', 'location.chauffeurs', 'location.paiements');
+        $comptesPaiement = \App\Models\ComptePaiement::where('actif', true)->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('factures.pdf', compact('facture', 'comptesPaiement'));
+
+        return $pdf->download($facture->numero_facture . '.pdf');
     }
 }

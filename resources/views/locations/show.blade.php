@@ -67,8 +67,7 @@
                         <div>
                             <flux:label class="text-xs uppercase text-red-500">Pénalité de retard</flux:label>
                             <div class="font-medium text-red-500">
-                                + {{ number_format($location->penalite, 2) }}
-                                {{ App\Helpers\CurrencyHelper::getCurrency() === 'MGA' ? 'Ar' : '€' }}
+                                + {{ \App\Helpers\CurrencyHelper::format($location->penalite) }}
                             </div>
                         </div>
                     @endif
@@ -79,8 +78,7 @@
                 <div>
                     <flux:label class="text-xs uppercase text-neutral-500">Tarif Total</flux:label>
                     <div class="font-medium">
-                        {{ number_format($location->tarif_total, 2) }}
-                        {{ App\Helpers\CurrencyHelper::getCurrency() === 'MGA' ? 'Ar' : '€' }}
+                        {{ \App\Helpers\CurrencyHelper::format($location->tarif_total) }}
                     </div>
                 </div>
                 <div>

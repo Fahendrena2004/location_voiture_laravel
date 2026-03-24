@@ -75,13 +75,16 @@
             </flux:field>
 
             <flux:field>
-                <flux:select name="user_id" label="Compte Utilisateur (Optionnel)" placeholder="Choisir un compte...">
-                    <flux:option value="">-- Aucun --</flux:option>
+                <flux:label>Compte Utilisateur (Optionnel)</flux:label>
+                <select name="user_id"
+                    class="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm">
+                    <option value="">-- Aucun --</option>
                     @foreach($users as $user)
-                        <flux:option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                            {{ $user->name }} ({{ $user->email }})</flux:option>
+                        <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                            {{ $user->name }} ({{ $user->email }})
+                        </option>
                     @endforeach
-                </flux:select>
+                </select>
                 @error('user_id') <flux:error>{{ $message }}</flux:error> @enderror
             </flux:field>
 

@@ -33,13 +33,18 @@
             <flux:input type="number" step="0.01" name="montant_total" label="Montant Total (€)"
                 value="{{ old('montant_total', $facture->montant_total) }}" required />
 
-            <flux:select name="statut" label="Statut" required>
-                <flux:select.option value="en attente" {{ old('statut', $facture->statut) === 'en attente' ? 'selected' : '' }}>En attente</flux:select.option>
-                <flux:select.option value="payée" {{ old('statut', $facture->statut) === 'payée' ? 'selected' : '' }}>
-                    Payée</flux:select.option>
-                <flux:select.option value="annulée" {{ old('statut', $facture->statut) === 'annulée' ? 'selected' : '' }}>
-                    Annulée</flux:select.option>
-            </flux:select>
+            <flux:field>
+                <flux:label>Statut</flux:label>
+                <select name="statut" required
+                    class="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2 text-sm">
+                    <option value="en attente" {{ old('statut', $facture->statut) === 'en attente' ? 'selected' : '' }}>En
+                        attente</option>
+                    <option value="payée" {{ old('statut', $facture->statut) === 'payée' ? 'selected' : '' }}>Payée
+                    </option>
+                    <option value="annulée" {{ old('statut', $facture->statut) === 'annulée' ? 'selected' : '' }}>Annulée
+                    </option>
+                </select>
+            </flux:field>
 
             <div class="flex justify-end gap-2 mt-8">
                 <flux:button as="a" href="{{ route('factures.index') }}" wire:navigate variant="ghost">Annuler
